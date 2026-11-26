@@ -444,7 +444,11 @@ mod tests {
     use super::{PARTIALS, split};
 
     #[test]
+    #[cfg(feature = "create-data")]
     fn partials_are_the_content_s_part_blocks_sorted() {
+        // Create's own block declarations: All Rights Reserved, not in the repository. The
+        // `create-data` feature turns this test on when you put your own copy in
+        // crates/horizon-create/data/.
         let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/data/create/horizon/block");
         let mut declared: Vec<String> = std::fs::read_dir(dir)
             .unwrap()

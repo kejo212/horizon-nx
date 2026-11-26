@@ -7,3 +7,9 @@ description = "Create's rules as plain Rust, no game types"
 
 [dependencies]
 # No registry dependencies: the launcher builds the mod offline against the pinned SDK.
+
+[features]
+# The tests that read Create's own block declarations. They are All Rights Reserved and are not
+# in the repository: put your own copy in crates/horizon-create/data/ and run the tests with
+# `cargo test -p create-engine --features create-data`.
+create-data = []

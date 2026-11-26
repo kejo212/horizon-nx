@@ -173,9 +173,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "create-data")]
     fn isolated_chain_placement_keeps_java_default_coordinate() {
         // ChainDriveBlock registers only PART; the running Java 6.0.11 binary
         // reports axis=y, axis_along_first=true, part=none for both drives.
+        // The declarations are Create's own data (All Rights Reserved): they are not in the
+        // repository, so this test needs your own copy under crates/horizon-create/data/
+        // (the `create-data` feature).
         for declaration in [
             include_str!("../../../data/create/horizon/block/encased_chain_drive.json"),
             include_str!("../../../data/create/horizon/block/adjustable_chain_gearshift.json"),

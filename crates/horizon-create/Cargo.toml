@@ -11,3 +11,8 @@ description = "Create 6.0.11 for Horizon, statically linked into the Switch buil
 horizon-mod-api = { path = "../horizon-mod-api" }
 # Create's rules as plain Rust with no game types.
 create-engine = { path = "src/engine" }
+
+[features]
+# The tests that read Create's own data (All Rights Reserved): they need your own copy in
+# crates/horizon-create/data/. Off by default.
+create-data = ["create-engine/create-data"]
