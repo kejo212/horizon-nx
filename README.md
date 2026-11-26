@@ -25,6 +25,15 @@ No Java, no emulation, no streaming: [Horizon](https://github.com/horizon-rust/h
 > This repository contains no Minecraft code, assets or game files: you need your own copy of Minecraft: Java
 > Edition. Running homebrew requires a Switch with custom firmware; do it at your own risk.
 
+> [!NOTE]
+> **This fork** ([kejo212/horizon-nx](https://github.com/kejo212/horizon-nx)) adds **Create 6.0.11** to
+> the Switch build: the Rust port ([`crates/horizon-create`](crates/horizon-create)) is linked
+> statically into `horizon.nro`, so it runs without a separate launcher or mod loader.
+> Create's assets and data are **All Rights Reserved** and are **not** included here: copy your own
+> `data/` and `assets/` into `switch/horizon/horizon-native-mods/create/` beside the NRO.
+> Everything else is upstream Horizon NX
+> ([KoHaku743/horizon-nx](https://github.com/KoHaku743/horizon-nx)), LGPL-3.0-or-later.
+
 ## Features
 
 - **The real Java Edition.** Single player worlds, and multiplayer on Java servers, online-mode ones included
@@ -352,6 +361,8 @@ and attaches the zip. Details: [docs/switch.md](docs/switch.md).
 - **The Switch homebrew toolchain**: [devkitPro](https://devkitpro.org) and [libnx](https://github.com/switchbrew/libnx).
 - **Horizon NX, this fork** (the Switch build's features, releases and the
   [companion app](https://github.com/KoHaku743/horizon-nx-companion)): [KoHaku743](https://github.com/KoHaku743).
+- **Create**: the Create Team / [The Creators of Create](https://github.com/Creators-of-Create/Create), ported to
+  Rust for Horizon in this fork (`crates/horizon-create`, MIT).
 
 ## License
 

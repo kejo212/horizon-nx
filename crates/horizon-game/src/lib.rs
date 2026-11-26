@@ -52,6 +52,16 @@ fn run() {
     // The Switch has no holder process (horizon-client builds without runtime-process there).
     #[cfg(not(target_os = "horizon"))]
     std::hint::black_box(&horizon_mod_package::holder::CAPABILITY);
+    // The fork's Switch build links Create into this binary; desktop builds and vanilla
+    // Switch builds keep the empty list.
+    #[cfg(feature = "create")]
+    horizon_mod_host::main_with(
+        vec![horizon_create::entry()],
+        &[],
+        horizon_create::BUILT,
+        startup,
+    );
+    #[cfg(not(feature = "create"))]
     horizon_mod_host::main_with(Vec::new(), &[], &[], startup);
 }
 

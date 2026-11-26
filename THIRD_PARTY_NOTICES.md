@@ -458,3 +458,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FO
 OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
+
+## Create for Horizon (this fork)
+
+`crates/horizon-create` is the Rust port of Create 6.0.11 for Horizon, linked statically into the
+Switch game binary. It is based on the `create-horizon-mod` port and is licensed MIT; the full
+license is in `crates/horizon-create/LICENSE`. Copyright (c) 2026 create-horizon contributors,
+The Create Team / The Creators of Create, and Ola Hulleberg.
+
+Create's assets and data are **All Rights Reserved** and are not part of this repository or its
+build artifacts. They are read at runtime from the player's own copy in
+`horizon-native-mods/create/`.

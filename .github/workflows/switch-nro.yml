@@ -47,6 +47,9 @@ env:
   # A device-code client has no secret of its own: the ID still ends up in the built program, and
   # Mojang has to approve it before the Minecraft step accepts it. Without it, sign-in is off.
   HORIZON_MSA_CLIENT_ID: ${{ secrets.HORIZON_MSA_CLIENT_ID }}
+  # The upstream commit this fork's changes are based on (KoHaku743/horizon-nx, switch-v010):
+  # SOURCE.txt names it so the corresponding source carries the exact diff to upstream.
+  HORIZON_NX_BASE_COMMIT: de477953c3958551a60f011fa447a99229f9fc43
 
 jobs:
   nro:
@@ -134,6 +137,57 @@ jobs:
           cp horizon-nx/target/aarch64-nintendo-horizon/release/horizon.nro out/switch/horizon/
           printf 'This file makes horizon.nro start the game. Without it, it runs a dedicated server.\n' > out/switch/horizon/client.txt
           sha256sum out/switch/horizon/horizon.nro | tee -a build.log
+          # LGPL-3.0-or-later compliance: the licenses, the third-party notices, and the source
+          # of this exact build travel with the binary.
+          cp horizon-nx/LICENSE out/switch/horizon/LICENSE
+          cp horizon-nx/LICENSES/GPL-3.0.txt out/switch/horizon/LICENSE-GPL-3.0.txt
+          cp horizon-nx/LICENSES/MIT.txt out/switch/horizon/LICENSE-Horizon-MIT.txt
+          cp horizon-nx/THIRD_PARTY_NOTICES.md out/switch/horizon/THIRD_PARTY_NOTICES.md
+          cp horizon-nx/crates/horizon-create/LICENSE out/switch/horizon/LICENSE-Create
+          # The corresponding source of this exact build: the repository, the commit, the upstream
+          # base and how to see the fork's changes. No backticks here: the heredoc would run them.
+          cat > out/switch/horizon/SOURCE.txt <<EOF
+          Horizon NX (Nintendo Switch build) with Create 6.0.11 linked statically
+          ======================================================================
+
+          Source of this build
+          --------------------
+          Repository:     $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
+          Commit:         $GITHUB_SHA
+          Upstream:       https://github.com/KoHaku743/horizon-nx (branch switch-v010)
+          Upstream base:  $HORIZON_NX_BASE_COMMIT
+
+          The complete corresponding source of this LGPL-3.0-or-later program is the repository
+          above at the commit above: it holds every source file compiled into horizon.nro, the
+          statically linked Create mod included (crates/horizon-create, MIT).
+
+            git clone $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
+            cd $GITHUB_REPOSITORY
+            git checkout $GITHUB_SHA
+
+          Rebuild the same program with the "Switch NRO" workflow in GitHub Actions, or locally
+          with Docker or Podman:
+
+            packaging/switch/build.sh all
+
+          Changes relative to upstream
+          ----------------------------
+          This fork adds crates/horizon-create (the Rust port of Create 6.0.11), the "create"
+          feature of crates/horizon-game, and the packaging that links it. The whole difference is
+          visible with:
+
+            git diff $HORIZON_NX_BASE_COMMIT $GITHUB_SHA
+
+          Third-party code
+          ----------------
+          THIRD_PARTY_NOTICES.md lists every third-party component and its license. The Create
+          port (crates/horizon-create) is MIT: see LICENSE-Create. Horizon's own licenses are
+          LICENSE (LGPL-3.0-or-later), LICENSE-GPL-3.0.txt and LICENSE-Horizon-MIT.txt.
+
+          Create's assets and data are All Rights Reserved: they are in neither this program nor
+          the corresponding source. The game reads them at runtime from your own copy, in
+          horizon-native-mods/create/ (data/ and assets/) beside this program.
+          EOF
           # The game's function symbols by address, to name the offsets in a cpu-profile.txt
           # (crates/horizon-nx/src/profiler.rs) from this build: the NRO has none.
           elf=horizon-nx/target/aarch64-nintendo-horizon/release/horizon-client

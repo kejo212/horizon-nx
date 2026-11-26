@@ -1,0 +1,13 @@
+[package]
+name = "horizon-create"
+version = "6.0.11"
+edition = "2024"
+license = "MIT"
+publish = false
+description = "Create 6.0.11 for Horizon, statically linked into the Switch build"
+
+[dependencies]
+# The workspace's mod API (the package's library is `mod_api`).
+horizon-mod-api = { path = "../horizon-mod-api" }
+# Create's rules as plain Rust with no game types.
+create-engine = { path = "src/engine" }

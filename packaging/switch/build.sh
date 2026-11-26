@@ -13,7 +13,8 @@
 #   ../mesa-switch    https://github.com/danfromtico/mesa-switch (only for `nvk`)
 # Variables: JOBS (cargo's parallel jobs; each rustc can take 1-2 GB of RAM), CARGO_ARGS (more
 # `cargo build` arguments), FEATURES (horizon-game features; by default audio, controllers,
-# nx-allocator, which also links NVK, and horizon-extras: Horizon Settings and the mod browser), VERSION, AUTHOR, ICON (a 256x256 JPEG for the HOME menu),
+# nx-allocator, which also links NVK, horizon-extras: Horizon Settings and the mod browser, and
+# create: the fork's statically linked Create mod), VERSION, AUTHOR, ICON (a 256x256 JPEG for the HOME menu),
 # HORIZON_SWITCH_BUILD (the build number the in-game updater compares: docs/switch-updates.md),
 # HORIZON_MSA_CLIENT_ID (the Azure app the title screen's Microsoft sign-in uses: msa.rs),
 # HORIZON_VERSION (the version the game shows) and HORIZON_SWITCH_VERSION (the one the in-game
@@ -81,7 +82,7 @@ nro() {
     cp "$ROOT/Cargo.lock" "$ROOT/Cargo.lock.switch-saved"
     trap 'mv -f "$ROOT/Cargo.lock.switch-saved" "$ROOT/Cargo.lock"' EXIT
     "$ENGINE" run --rm --log-driver=none \
-        -e CONFIG="$config" -e JOBS="${JOBS:-}" -e CARGO_ARGS="${CARGO_ARGS:-}" -e FEATURES="${FEATURES-audio,controllers,nx-allocator,horizon-extras}" \
+        -e CONFIG="$config" -e JOBS="${JOBS:-}" -e CARGO_ARGS="${CARGO_ARGS:-}" -e FEATURES="${FEATURES-audio,controllers,nx-allocator,horizon-extras,create}" \
         -e HORIZON_NX_NVK_LIB=/src/bevy-horizon/nvk/lib \
         -e HORIZON_SWITCH_BUILD="${HORIZON_SWITCH_BUILD:-}" \
         -e HORIZON_GAME_BUILD_ID="${HORIZON_GAME_BUILD_ID:-$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo switch-build)}" \
