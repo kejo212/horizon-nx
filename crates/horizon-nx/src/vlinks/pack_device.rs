@@ -64,7 +64,7 @@ static FOLDERS: Mutex<Vec<Folder>> = Mutex::new(Vec::new());
 static BUILDING: AtomicBool = AtomicBool::new(false);
 
 fn log(line: std::fmt::Arguments) {
-    crate::logging::write_log_line(line);
+    crate::logging::write_log_line_long(line);
     log::info!("{line}");
 }
 
@@ -302,15 +302,17 @@ fn build_one(root: &Parts, folder: &Path, marker: Option<&Path>) {
     };
     let started = Instant::now();
     log(format_args!(
-        "[Pack] packing {} into {}",
+        "[Pack] packing {} into {}; {}",
         folder.display(),
-        pack::pack_path(folder).display()
+        pack::pack_path(folder).display(),
+        crate::memory::MallocFigures::now()
     ));
     let result = pack::build(folder, stamp.as_deref(), |files| {
         if files % 4000 == 0 {
             log(format_args!(
-                "[Pack] {files} files packed, {:.0} s",
-                started.elapsed().as_secs_f64()
+                "[Pack] {files} files packed, {:.0} s; {}",
+                started.elapsed().as_secs_f64(),
+                crate::memory::MallocFigures::now()
             ));
         }
     });

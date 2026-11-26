@@ -30,6 +30,9 @@ static LOCK: AtomicU32 = AtomicU32::new(0);
 
 /// Bytes taken from malloc for pools.
 pub(crate) static POOL_BYTES: AtomicUsize = AtomicUsize::new(0);
+/// Times a pool could not be taken from malloc, and the size of the last such pool.
+pub(crate) static GROW_FAILURES: AtomicUsize = AtomicUsize::new(0);
+pub(crate) static LAST_GROW_BYTES: AtomicUsize = AtomicUsize::new(0);
 /// Bytes in the heap's live blocks (their usable sizes), the small and medium caches' blocks
 /// included: the pools never shrink, so this says how much of them a session still uses.
 pub(crate) static LIVE_BYTES: AtomicUsize = AtomicUsize::new(0);
@@ -73,6 +76,8 @@ fn grow(heap: &mut Heap, layout: Layout) -> bool {
     let size = needed.max(POOL).next_multiple_of(4096);
     let pool = unsafe { memalign(4096, size) }.cast::<u8>();
     let Some(pool) = NonNull::new(pool) else {
+        GROW_FAILURES.fetch_add(1, Relaxed);
+        LAST_GROW_BYTES.store(size, Relaxed);
         return false;
     };
     POOL_BYTES.fetch_add(size, Relaxed);

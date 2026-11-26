@@ -122,6 +122,13 @@ static MALLOC_MEDIUM_BYTES: AtomicUsize = AtomicUsize::new(0);
 static LARGE_FALLBACKS: AtomicUsize = AtomicUsize::new(0);
 /// Small blocks malloc couldn't place, which the region took.
 static SMALL_RESCUES: AtomicUsize = AtomicUsize::new(0);
+/// Small blocks for which both malloc and the region came up empty.
+static SMALL_RESCUE_FAILURES: AtomicUsize = AtomicUsize::new(0);
+/// Failures written to `log.txt` so far. The first few are reported, so the error path's own
+/// allocations can't fill the log, but a burst from several threads still shows.
+static FAILURES: AtomicUsize = AtomicUsize::new(0);
+/// The most allocation failures to report.
+const MAX_FAILURE_REPORTS: usize = 8;
 
 /// Where Rust's memory is, for the `[Memory]` lines. Reading it doesn't allocate.
 #[derive(Clone, Copy)]
@@ -135,6 +142,11 @@ pub(crate) struct Figures {
     pub(crate) heap_pools: u64,
     /// Bytes in the TLSF heap's live blocks, cached ones included.
     pub(crate) heap_live: u64,
+    /// Times a TLSF pool could not be taken from malloc, and the last pool size tried.
+    pub(crate) tlsf_grow_failures: usize,
+    pub(crate) tlsf_last_grow: u64,
+    /// Small blocks for which both malloc and the region came up empty.
+    pub(crate) small_rescue_failures: usize,
     pub(crate) cache: small_blocks::Stats,
     pub(crate) medium: medium_blocks::Stats,
 }
@@ -148,6 +160,9 @@ pub(crate) fn figures() -> Figures {
         small_rescues: SMALL_RESCUES.load(Relaxed),
         heap_pools: tlsf_heap::POOL_BYTES.load(Relaxed) as u64,
         heap_live: tlsf_heap::LIVE_BYTES.load(Relaxed) as u64,
+        tlsf_grow_failures: tlsf_heap::GROW_FAILURES.load(Relaxed),
+        tlsf_last_grow: tlsf_heap::LAST_GROW_BYTES.load(Relaxed) as u64,
+        small_rescue_failures: SMALL_RESCUE_FAILURES.load(Relaxed),
         cache: CACHE.stats(),
         medium: MCACHE.stats(),
     }
@@ -246,6 +261,8 @@ unsafe fn allocate(layout: Layout, zeroed: bool) -> *mut u8 {
     let ptr = unsafe { region_alloc(layout, zeroed) };
     if !ptr.is_null() {
         SMALL_RESCUES.fetch_add(1, Relaxed);
+    } else {
+        SMALL_RESCUE_FAILURES.fetch_add(1, Relaxed);
     }
     ptr
 }
@@ -287,13 +304,105 @@ unsafe fn moved(ptr: *mut u8, layout: Layout, new: *mut u8, new_size: usize) -> 
     new
 }
 
+/// Writes a failed allocation to `log.txt` before Rust's allocation-error handler aborts the
+/// process: the block, the thread's TLS pointer, the caller's return addresses, and the heap's
+/// figures. Allocates nothing, so it can run when the allocator has just failed.
+#[cfg(target_os = "horizon")]
+#[cold]
+#[inline(never)]
+fn report_failure(layout: Layout) {
+    use crate::logging::{write_log_line, write_log_line_long};
+
+    let n = FAILURES.fetch_add(1, Relaxed);
+    if n >= MAX_FAILURE_REPORTS {
+        return;
+    }
+    let (sp, fp, tls): (usize, usize, usize);
+    unsafe {
+        core::arch::asm!("mov {}, sp", out(reg) sp, options(nomem, nostack, preserves_flags));
+        core::arch::asm!("mov {}, x29", out(reg) fp, options(nomem, nostack, preserves_flags));
+        core::arch::asm!("mrs {}, tpidrro_el0", out(reg) tls, options(nomem, nostack, preserves_flags));
+    }
+    write_log_line(format_args!(
+        "[Alloc] FAILED #{}: {} bytes, align {}; thread tls {tls:#x}, sp {sp:#x}, fp {fp:#x}",
+        n + 1,
+        layout.size(),
+        layout.align()
+    ));
+    // The stack comes before the figures: if the heap's bookkeeping is what broke, `mallinfo`
+    // may fault, and the call chain is the part worth keeping.
+    let mut frames = [0usize; 32];
+    let count = unsafe { stack_frames(&mut frames) };
+    let base = crate::logging::nro_base() as usize;
+    for &frame in &frames[..count] {
+        write_log_line(format_args!(
+            "[Alloc]   at {frame:#x} (nro+{:#x})",
+            frame.wrapping_sub(base)
+        ));
+    }
+    write_log_line_long(format_args!(
+        "[Alloc] {}",
+        crate::memory::MallocFigures::now()
+    ));
+}
+
+/// The calling thread's return addresses, innermost first, from its frame-pointer chain. The
+/// target keeps frame pointers (`"frame-pointer": "always"` in bevy-horizon's target spec).
+/// Reads only the current thread's stack, found with `svcQueryMemory`, so a bad link stops the
+/// walk instead of faulting.
+#[cfg(target_os = "horizon")]
+#[inline(never)]
+unsafe fn stack_frames(out: &mut [usize]) -> usize {
+    use crate::logging::ffi;
+
+    let (sp, fp): (usize, usize);
+    unsafe {
+        core::arch::asm!("mov {}, sp", out(reg) sp, options(nomem, nostack, preserves_flags));
+        core::arch::asm!("mov {}, x29", out(reg) fp, options(nomem, nostack, preserves_flags));
+    }
+    let mut info = ffi::MemoryInfo::default();
+    let mut page = 0u32;
+    if unsafe { ffi::svcQueryMemory(&mut info, &mut page, sp as u64) } != 0 {
+        return 0;
+    }
+    let lo = info.addr as usize;
+    let hi = info.addr.saturating_add(info.size) as usize;
+    let mut n = 0;
+    let mut frame = fp;
+    let mut floor = sp;
+    while n < out.len()
+        && frame % 16 == 0
+        && frame >= floor
+        && frame >= lo
+        && frame <= hi.saturating_sub(16)
+    {
+        let (next, ret) = unsafe { (*(frame as *const usize), *((frame + 8) as *const usize)) };
+        if ret == 0 {
+            break;
+        }
+        out[n] = ret;
+        n += 1;
+        floor = frame + 1;
+        frame = next;
+    }
+    n
+}
+
 unsafe impl GlobalAlloc for HorizonAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        unsafe { allocate(layout, false) }
+        let ptr = unsafe { allocate(layout, false) };
+        if ptr.is_null() {
+            report_failure(layout);
+        }
+        ptr
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        unsafe { allocate(layout, true) }
+        let ptr = unsafe { allocate(layout, true) };
+        if ptr.is_null() {
+            report_failure(layout);
+        }
+        ptr
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
@@ -301,88 +410,100 @@ unsafe impl GlobalAlloc for HorizonAllocator {
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        // SAFETY: `GlobalAlloc::realloc`'s caller guarantees `new_size`, rounded up to the
-        // alignment, doesn't overflow `isize`.
-        let new_layout = unsafe { Layout::from_size_align_unchecked(new_size, layout.align()) };
-
-        if in_region(ptr) {
-            let (old_rounded, new_rounded) = (rounded(layout.size()), rounded(new_size));
-            if new_rounded == old_rounded {
-                return ptr;
-            }
-            if new_rounded < old_rounded && new_size >= LARGE {
-                unsafe { release_tail(ptr, new_rounded, old_rounded) };
-                return ptr;
-            }
-            // Growing, or small enough for malloc now.
-            let new = unsafe { allocate(new_layout, false) };
-            if !new.is_null() {
-                return unsafe { moved(ptr, layout, new, new_size) };
-            }
-            if new_rounded < old_rounded {
-                unsafe { release_tail(ptr, new_rounded, old_rounded) };
-                return ptr;
-            }
-            return new;
+        let new = unsafe { reallocate(ptr, layout, new_size) };
+        if new.is_null() {
+            // SAFETY: the caller guarantees `new_size`, rounded up to the alignment, doesn't
+            // overflow `isize`.
+            report_failure(unsafe { Layout::from_size_align_unchecked(new_size, layout.align()) });
         }
+        new
+    }
+}
 
-        let (old_small, new_small) = (
-            CACHE.class_for(layout.size(), layout.align()),
-            CACHE.class_for(new_size, layout.align()),
-        );
-        let (old_medium, new_medium) = (
-            MCACHE.class_for(layout.size(), layout.align()),
-            MCACHE.class_for(new_size, layout.align()),
-        );
-        if old_small.is_some() || new_small.is_some() || old_medium.is_some() || new_medium.is_some() {
-            // A block that stays in its class stays put: it was allocated at the class's size,
-            // unless the cache was off then.
-            if old_small.is_some() && old_small == new_small && unsafe { CACHE.usable_size(ptr) } >= new_size {
-                return ptr;
-            }
-            if old_medium.is_some() && old_medium == new_medium && unsafe { MCACHE.usable_size(ptr) } >= new_size {
-                // The block stays live and parked-or-held; only its counted size changes, and only
-                // in the 64-256 KiB band `count_malloc` tracks. `count_malloc` ignores a size under
-                // MEDIUM, so a block that straddles it (both in the 64 KiB class) is handled.
-                if layout.size() >= MEDIUM || new_size >= MEDIUM {
-                    count_malloc(layout.size(), false);
-                    count_malloc(new_size, true);
-                }
-                return ptr;
-            }
-            // In or out of a cache's sizes, or to another class: a new block, so that every block
-            // a cache keeps is its class's size.
-            let new = unsafe { allocate(new_layout, false) };
-            if new.is_null() {
-                return new;
-            }
+/// The body of [`GlobalAlloc::realloc`], so the trait method can report a failure.
+unsafe fn reallocate(ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
+    // SAFETY: `GlobalAlloc::realloc`'s caller guarantees `new_size`, rounded up to the
+    // alignment, doesn't overflow `isize`.
+    let new_layout = unsafe { Layout::from_size_align_unchecked(new_size, layout.align()) };
+
+    if in_region(ptr) {
+        let (old_rounded, new_rounded) = (rounded(layout.size()), rounded(new_size));
+        if new_rounded == old_rounded {
+            return ptr;
+        }
+        if new_rounded < old_rounded && new_size >= LARGE {
+            unsafe { release_tail(ptr, new_rounded, old_rounded) };
+            return ptr;
+        }
+        // Growing, or small enough for malloc now.
+        let new = unsafe { allocate(new_layout, false) };
+        if !new.is_null() {
             return unsafe { moved(ptr, layout, new, new_size) };
         }
+        if new_rounded < old_rounded {
+            unsafe { release_tail(ptr, new_rounded, old_rounded) };
+            return ptr;
+        }
+        return new;
+    }
 
-        if new_size >= LARGE {
-            let new = unsafe { region_alloc(new_layout, false) };
-            if !new.is_null() {
-                return unsafe { moved(ptr, layout, new, new_size) };
+    let (old_small, new_small) = (
+        CACHE.class_for(layout.size(), layout.align()),
+        CACHE.class_for(new_size, layout.align()),
+    );
+    let (old_medium, new_medium) = (
+        MCACHE.class_for(layout.size(), layout.align()),
+        MCACHE.class_for(new_size, layout.align()),
+    );
+    if old_small.is_some() || new_small.is_some() || old_medium.is_some() || new_medium.is_some() {
+        // A block that stays in its class stays put: it was allocated at the class's size,
+        // unless the cache was off then.
+        if old_small.is_some() && old_small == new_small && unsafe { CACHE.usable_size(ptr) } >= new_size {
+            return ptr;
+        }
+        if old_medium.is_some() && old_medium == new_medium && unsafe { MCACHE.usable_size(ptr) } >= new_size {
+            // The block stays live and parked-or-held; only its counted size changes, and only
+            // in the 64-256 KiB band `count_malloc` tracks. `count_malloc` ignores a size under
+            // MEDIUM, so a block that straddles it (both in the 64 KiB class) is handled.
+            if layout.size() >= MEDIUM || new_size >= MEDIUM {
+                count_malloc(layout.size(), false);
+                count_malloc(new_size, true);
             }
-            LARGE_FALLBACKS.fetch_add(1, Relaxed);
+            return ptr;
         }
-        let new = unsafe { tlsf_heap::realloc(ptr, layout, new_size) };
-        // A failed realloc leaves the block as it was.
-        let new = or_after_drain(new, || unsafe { tlsf_heap::realloc(ptr, layout, new_size) });
-        if !new.is_null() {
-            count_malloc(layout.size(), false);
-            count_malloc(new_size, true);
-            return new;
-        }
-        if new_size >= LARGE {
-            return new;
-        }
-        // malloc is full, but a free run in the region can still hold the block.
-        let new = unsafe { region_alloc(new_layout, false) };
+        // In or out of a cache's sizes, or to another class: a new block, so that every block
+        // a cache keeps is its class's size.
+        let new = unsafe { allocate(new_layout, false) };
         if new.is_null() {
             return new;
         }
-        SMALL_RESCUES.fetch_add(1, Relaxed);
-        unsafe { moved(ptr, layout, new, new_size) }
+        return unsafe { moved(ptr, layout, new, new_size) };
     }
+
+    if new_size >= LARGE {
+        let new = unsafe { region_alloc(new_layout, false) };
+        if !new.is_null() {
+            return unsafe { moved(ptr, layout, new, new_size) };
+        }
+        LARGE_FALLBACKS.fetch_add(1, Relaxed);
+    }
+    let new = unsafe { tlsf_heap::realloc(ptr, layout, new_size) };
+    // A failed realloc leaves the block as it was.
+    let new = or_after_drain(new, || unsafe { tlsf_heap::realloc(ptr, layout, new_size) });
+    if !new.is_null() {
+        count_malloc(layout.size(), false);
+        count_malloc(new_size, true);
+        return new;
+    }
+    if new_size >= LARGE {
+        return new;
+    }
+    // malloc is full, but a free run in the region can still hold the block.
+    let new = unsafe { region_alloc(new_layout, false) };
+    if new.is_null() {
+        SMALL_RESCUE_FAILURES.fetch_add(1, Relaxed);
+        return new;
+    }
+    SMALL_RESCUES.fetch_add(1, Relaxed);
+    unsafe { moved(ptr, layout, new, new_size) }
 }

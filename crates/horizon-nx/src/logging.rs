@@ -710,6 +710,18 @@ pub(crate) fn write_log_line(args: core::fmt::Arguments) {
     write_log(line.as_bytes());
 }
 
+/// [`write_log_line`] with room for the `[Memory]` figures and a failure's stack, which are
+/// longer than a log line's usual 255 bytes.
+#[cfg(target_os = "horizon")]
+pub(crate) fn write_log_line_long(args: core::fmt::Arguments) {
+    use core::fmt::Write;
+
+    let mut line = FixedBuf::<2048>::new();
+    let _ = line.write_fmt(args);
+    line.end_line();
+    write_log(line.as_bytes());
+}
+
 /// Writes out what the log writer has queued, then syncs log.txt, on this thread.
 #[cfg(target_os = "horizon")]
 pub(crate) fn sync_log() {

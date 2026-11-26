@@ -519,12 +519,13 @@ pub fn suspend_until_out_of_background() -> Option<u32> {
 const HEARTBEAT_EVERY: std::time::Duration = std::time::Duration::from_secs(10);
 #[cfg(target_os = "horizon")]
 const SYNC_EVERY: std::time::Duration = std::time::Duration::from_secs(1);
-/// How often, in seconds, a heartbeat adds the `[Memory]` line; 0 for never. 60 unless
-/// `BEVY_HORIZON_MEMORY_EVERY` sets it (`configure_memory_line_from_env`). Its figures come from
-/// newlib's `mallinfo`, which walks every free block with malloc's lock held. Once Skate 3 had
-/// loaded its map that took about 41 ms, a frame every time on this thread, and as long a wait
-/// for any other thread that allocated meanwhile (sk8 findings 21). In play, that is a hitch
-/// once a minute (sk8 findings 33), so a game can turn the line off.
+/// How often, in seconds, a `[Memory]` line is written; 0 for never. 60 unless
+/// `BEVY_HORIZON_MEMORY_EVERY` sets it (`configure_memory_line_from_env`). It has its own clock,
+/// so a value under the heartbeat's 10 s shows the heap that often (1 s while a world loads). Its
+/// figures come from newlib's `mallinfo`, which walks every free block with malloc's lock held.
+/// Once Skate 3 had loaded its map that took about 41 ms, a frame every time on this thread, and
+/// as long a wait for any other thread that allocated meanwhile (sk8 findings 21). In play, that
+/// is a hitch once a minute (sk8 findings 33), so a game can turn the line off.
 #[cfg(target_os = "horizon")]
 static MEMORY_EVERY_SECS: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(60);
 
@@ -649,10 +650,6 @@ pub fn flush_logs() {
                 b.gpu = work;
                 b.gpu_frame = b.frame;
             }
-            let memory_every = MEMORY_EVERY_SECS.load(core::sync::atomic::Ordering::Relaxed);
-            if memory_every > 0 && due(&mut b.memory, Duration::from_secs(memory_every)) {
-                log::info!("[Memory] {}", crate::memory::malloc_report());
-            }
             if let Some(line) = crate::vlinks::io_report() {
                 log::info!("{line}");
             }
@@ -663,6 +660,22 @@ pub fn flush_logs() {
                     threads.closed_total,
                     threads.running,
                 );
+            }
+        }
+        // The [Memory] line has its own clock: `BEVY_HORIZON_MEMORY_EVERY=1` then shows the
+        // heap every second while a world loads, instead of waiting for the 10 s heartbeat.
+        let memory_every = MEMORY_EVERY_SECS.load(core::sync::atomic::Ordering::Relaxed);
+        if memory_every > 0 && due(&mut b.memory, Duration::from_secs(memory_every)) {
+            let figures = crate::memory::MallocFigures::now();
+            if memory_every < 10 {
+                // A diagnostic cadence: write straight to log.txt, without the logger's strings,
+                // so a line about a nearly full heap can't be what runs it out.
+                crate::logging::write_log_line_long(format_args!(
+                    "[Memory] frame {}: {figures}",
+                    b.frame
+                ));
+            } else {
+                log::info!("[Memory] frame {}: {figures}", b.frame);
             }
         }
         if sync {

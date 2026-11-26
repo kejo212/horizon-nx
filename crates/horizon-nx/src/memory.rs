@@ -312,6 +312,21 @@ impl core::fmt::Display for MallocFigures {
                 mib(rust.heap_pools),
                 mib(rust.heap_live),
             )?;
+            if rust.tlsf_grow_failures != 0 {
+                write!(
+                    f,
+                    "; malloc refused a {} KiB TLSF pool {} times",
+                    rust.tlsf_last_grow / 1024,
+                    rust.tlsf_grow_failures,
+                )?;
+            }
+            if rust.small_rescue_failures != 0 {
+                write!(
+                    f,
+                    "; {} small blocks found no room in malloc or the region",
+                    rust.small_rescue_failures,
+                )?;
+            }
             if rust.large_fallbacks != 0 {
                 write!(
                     f,
