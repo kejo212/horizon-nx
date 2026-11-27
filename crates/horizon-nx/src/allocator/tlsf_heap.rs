@@ -23,6 +23,11 @@ type Heap = rlsf::Tlsf<'static, u32, u16, 26, 16>;
 
 /// The least memory taken from malloc at a time.
 const POOL: usize = 32 << 20;
+/// Pools to try when [`POOL`] can't be taken from malloc. The top-down region leaves only
+/// `NOUVEAU_HORIZON_REGION_CPU_RESERVE_B` (16 MiB in the linked NVK) above the CPU heap's break,
+/// so once the region has grown a 32 MiB `memalign` can fail even with a GiB free in the heap's
+/// holes; a smaller pool still serves the block that needed it.
+const POOL_FALLBACKS: [usize; 2] = [8 << 20, 1 << 20];
 
 /// The heap, and the libnx mutex guarding it (a `u32`, 0 when unlocked).
 static mut HEAP: Heap = Heap::new();
@@ -33,6 +38,8 @@ pub(crate) static POOL_BYTES: AtomicUsize = AtomicUsize::new(0);
 /// Times a pool could not be taken from malloc, and the size of the last such pool.
 pub(crate) static GROW_FAILURES: AtomicUsize = AtomicUsize::new(0);
 pub(crate) static LAST_GROW_BYTES: AtomicUsize = AtomicUsize::new(0);
+/// Times a smaller fallback pool served the block because the full pool didn't fit.
+pub(crate) static FALLBACK_POOLS: AtomicUsize = AtomicUsize::new(0);
 /// Bytes in the heap's live blocks (their usable sizes), the small and medium caches' blocks
 /// included: the pools never shrink, so this says how much of them a session still uses.
 pub(crate) static LIVE_BYTES: AtomicUsize = AtomicUsize::new(0);
@@ -73,17 +80,26 @@ fn grow(heap: &mut Heap, layout: Layout) -> bool {
     else {
         return false;
     };
-    let size = needed.max(POOL).next_multiple_of(4096);
-    let pool = unsafe { memalign(4096, size) }.cast::<u8>();
-    let Some(pool) = NonNull::new(pool) else {
-        GROW_FAILURES.fetch_add(1, Relaxed);
-        LAST_GROW_BYTES.store(size, Relaxed);
-        return false;
-    };
-    POOL_BYTES.fetch_add(size, Relaxed);
-    // SAFETY: the pool is ours from now on and never given back, so it outlives the heap.
-    unsafe { heap.insert_free_block_ptr(NonNull::slice_from_raw_parts(pool, size)) };
-    true
+    let wanted = needed.max(POOL).next_multiple_of(4096);
+    for size in [wanted, POOL_FALLBACKS[0], POOL_FALLBACKS[1]] {
+        if size < needed {
+            continue;
+        }
+        let pool = unsafe { memalign(4096, size) }.cast::<u8>();
+        let Some(pool) = NonNull::new(pool) else {
+            continue;
+        };
+        POOL_BYTES.fetch_add(size, Relaxed);
+        if size < wanted {
+            FALLBACK_POOLS.fetch_add(1, Relaxed);
+        }
+        // SAFETY: the pool is ours from now on and never given back, so it outlives the heap.
+        unsafe { heap.insert_free_block_ptr(NonNull::slice_from_raw_parts(pool, size)) };
+        return true;
+    }
+    GROW_FAILURES.fetch_add(1, Relaxed);
+    LAST_GROW_BYTES.store(wanted, Relaxed);
+    false
 }
 
 /// A block of `layout`, zeroed if `zeroed`, or null when neither the heap nor malloc has room.

@@ -145,6 +145,8 @@ pub(crate) struct Figures {
     /// Times a TLSF pool could not be taken from malloc, and the last pool size tried.
     pub(crate) tlsf_grow_failures: usize,
     pub(crate) tlsf_last_grow: u64,
+    /// Times a smaller fallback pool served the block because the full pool didn't fit.
+    pub(crate) tlsf_fallbacks: usize,
     /// Small blocks for which both malloc and the region came up empty.
     pub(crate) small_rescue_failures: usize,
     pub(crate) cache: small_blocks::Stats,
@@ -162,6 +164,7 @@ pub(crate) fn figures() -> Figures {
         heap_live: tlsf_heap::LIVE_BYTES.load(Relaxed) as u64,
         tlsf_grow_failures: tlsf_heap::GROW_FAILURES.load(Relaxed),
         tlsf_last_grow: tlsf_heap::LAST_GROW_BYTES.load(Relaxed) as u64,
+        tlsf_fallbacks: tlsf_heap::FALLBACK_POOLS.load(Relaxed),
         small_rescue_failures: SMALL_RESCUE_FAILURES.load(Relaxed),
         cache: CACHE.stats(),
         medium: MCACHE.stats(),

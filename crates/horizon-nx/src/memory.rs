@@ -320,6 +320,13 @@ impl core::fmt::Display for MallocFigures {
                     rust.tlsf_grow_failures,
                 )?;
             }
+            if rust.tlsf_fallbacks != 0 {
+                write!(
+                    f,
+                    "; {} TLSF pools came from a smaller fallback size",
+                    rust.tlsf_fallbacks,
+                )?;
+            }
             if rust.small_rescue_failures != 0 {
                 write!(
                     f,
