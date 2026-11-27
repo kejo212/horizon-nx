@@ -1,0 +1,947 @@
+Loaded image: horizon-switch-toolchain:local
+Loaded image: bevy-horizon-toolchain:local
+::warning::No HORIZON_MSA_CLIENT_ID secret: this test build has no Microsoft sign-in.
+==> compiling horizon-client for the Switch (Horizon OS)
+patch-std: current_exe on horizon is argv[0]
+    Updating crates.io index
+warning: patch `arboard v3.7.0 (/src/horizon-nx/packaging/switch/stubs/arboard)` was not used in the crate graph
+warning: patch `cpal v0.17.3 (/src/bevy-horizon/patches/cpal)` was not used in the crate graph
+warning: patch `fs4 v1.1.0 (/src/horizon-nx/packaging/switch/stubs/fs4)` was not used in the crate graph
+warning: patch `getrandom v0.4.3 (/src/bevy-horizon/patches/getrandom)` was not used in the crate graph
+warning: patch `getrandom v0.2.17 (/src/bevy-horizon/patches/getrandom-0.2)` was not used in the crate graph
+warning: patch `getrandom v0.3.4 (/src/horizon-nx/third_party/getrandom-0.3)` was not used in the crate graph
+warning: patch `if-addrs v0.15.0 (/src/horizon-nx/packaging/switch/stubs/if-addrs)` was not used in the crate graph
+warning: patch `libmimalloc-sys v0.1.49 (/src/horizon-nx/packaging/switch/stubs/libmimalloc-sys)` was not used in the crate graph
+warning: patch `memmap2 v0.9.11 (/src/bevy-horizon/patches/memmap2)` was not used in the crate graph
+warning: patch `mimalloc v0.1.52 (/src/horizon-nx/packaging/switch/stubs/mimalloc)` was not used in the crate graph
+warning: patch `mio v1.2.4 (/src/horizon-nx/third_party/mio)` was not used in the crate graph
+warning: patch `raw-window-handle v0.6.2 (/src/bevy-horizon/patches/raw-window-handle)` was not used in the crate graph
+warning: patch `ring v0.17.14 (/src/bevy-horizon/patches/ring)` was not used in the crate graph
+warning: patch `rustix v1.1.5 (/src/bevy-horizon/patches/rustix)` was not used in the crate graph
+warning: patch `socket2 v0.5.10 (/src/horizon-nx/third_party/socket2)` was not used in the crate graph
+warning: patch `wgpu v30.0.1 (/src/horizon-nx/third_party/wgpu)` was not used in the crate graph
+warning: patch `wgpu-core v30.0.1 (/src/horizon-nx/third_party/wgpu-core)` was not used in the crate graph
+warning: patch `wgpu-core-deps-windows-linux-android v30.0.1 (/src/horizon-nx/third_party/wgpu-core-deps-windows-linux-android)` was not used in the crate graph
+warning: patch `winit v0.30.13 (/src/horizon-nx/third_party/winit)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+     Locking 1 package to highest compatible version
+      Adding libc v0.2.190 (/src/bevy-horizon/patches/libc)
+    Removing libc v0.2.189
+note: pass `--verbose` to see 13 unchanged dependencies behind latest
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/horizon-create/src/engine/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+15 ~ create-data = []
+16 + [lints]
+17 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+15 ~ create-data = []
+16 + [lints]
+   |
+warning: `create-engine` (manifest) generated 1 warning
+warning: missing `[lints]` to inherit `[workspace.lints]`
+  --> crates/horizon-create/Cargo.toml
+   = note: `cargo::missing_lints_inheritance` is set to `warn` by default
+help: to inherit `workspace.lints, add:
+   |
+18 ~ create-data = ["create-engine/create-data"]
+19 + [lints]
+20 + workspace = true
+   |
+help: to clarify your intent to not inherit, add:
+   |
+18 ~ create-data = ["create-engine/create-data"]
+19 + [lints]
+   |
+warning: `horizon-create` (manifest) generated 1 warning
+ Downloading crates ...
+  Downloaded const-default v1.0.0
+warning: patch `arboard v3.7.0 (/src/horizon-nx/packaging/switch/stubs/arboard)` was not used in the crate graph
+warning: patch `cpal v0.17.3 (/src/bevy-horizon/patches/cpal)` was not used in the crate graph
+warning: patch `fs4 v1.1.0 (/src/horizon-nx/packaging/switch/stubs/fs4)` was not used in the crate graph
+warning: patch `getrandom v0.4.3 (/src/bevy-horizon/patches/getrandom)` was not used in the crate graph
+warning: patch `getrandom v0.2.17 (/src/bevy-horizon/patches/getrandom-0.2)` was not used in the crate graph
+warning: patch `getrandom v0.3.4 (/src/horizon-nx/third_party/getrandom-0.3)` was not used in the crate graph
+warning: patch `if-addrs v0.15.0 (/src/horizon-nx/packaging/switch/stubs/if-addrs)` was not used in the crate graph
+warning: patch `libmimalloc-sys v0.1.49 (/src/horizon-nx/packaging/switch/stubs/libmimalloc-sys)` was not used in the crate graph
+warning: patch `memmap2 v0.9.11 (/src/bevy-horizon/patches/memmap2)` was not used in the crate graph
+warning: patch `mimalloc v0.1.52 (/src/horizon-nx/packaging/switch/stubs/mimalloc)` was not used in the crate graph
+warning: patch `mio v1.2.4 (/src/horizon-nx/third_party/mio)` was not used in the crate graph
+warning: patch `raw-window-handle v0.6.2 (/src/bevy-horizon/patches/raw-window-handle)` was not used in the crate graph
+warning: patch `ring v0.17.14 (/src/bevy-horizon/patches/ring)` was not used in the crate graph
+warning: patch `rustix v1.1.5 (/src/bevy-horizon/patches/rustix)` was not used in the crate graph
+warning: patch `socket2 v0.5.10 (/src/horizon-nx/third_party/socket2)` was not used in the crate graph
+warning: patch `wgpu v30.0.1 (/src/horizon-nx/third_party/wgpu)` was not used in the crate graph
+warning: patch `wgpu-core v30.0.1 (/src/horizon-nx/third_party/wgpu-core)` was not used in the crate graph
+warning: patch `wgpu-core-deps-windows-linux-android v30.0.1 (/src/horizon-nx/third_party/wgpu-core-deps-windows-linux-android)` was not used in the crate graph
+warning: patch `winit v0.30.13 (/src/horizon-nx/third_party/winit)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+ Downloading crates ...
+  Downloaded getopts v0.2.24
+  Downloaded cfg-if v1.0.4
+  Downloaded rustc-literal-escaper v0.0.8
+  Downloaded addr2line v0.27.1
+  Downloaded gimli v0.34.0
+   Compiling compiler_builtins v0.1.160 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)
+   Compiling core v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core)
+   Compiling libc v0.2.190 (/src/bevy-horizon/patches/libc)
+   Compiling object v0.39.1
+   Compiling std v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std)
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.26
+   Compiling serde_core v1.0.229
+   Compiling version_check v0.9.5
+   Compiling cfg-if v1.0.5
+   Compiling zmij v1.0.23
+   Compiling generic-array v0.14.7
+   Compiling serde v1.0.229
+   Compiling syn v3.0.6
+   Compiling syn v2.0.119
+   Compiling memchr v2.8.3
+   Compiling semver v1.0.28
+   Compiling anyhow v1.0.104
+   Compiling libm v0.2.16
+   Compiling bitflags v2.13.2
+   Compiling serde_json v1.0.151
+   Compiling zerocopy v0.8.60
+   Compiling foldhash v0.2.0
+   Compiling typenum v1.20.1
+   Compiling hashbrown v0.17.1
+   Compiling itoa v1.0.18
+   Compiling equivalent v1.0.2
+   Compiling winnow v1.0.4
+   Compiling toml_parser v1.1.3+spec-1.1.0
+   Compiling indexmap v2.14.2
+   Compiling serde_spanned v1.1.2
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+   Compiling getrandom v0.2.17 (/src/bevy-horizon/patches/getrandom-0.2)
+warning: use of deprecated associated function `core::num::<impl usize>::max_value`: replaced by the `MAX` associated constant on this type
+  --> /src/bevy-horizon/patches/getrandom-0.2/src/use_file.rs:19:33
+   |
+19 | const FD_UNINIT: usize = usize::max_value();
+   |                                 ^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated associated function `core::num::<impl usize>::max_value`: replaced by the `MAX` associated constant on this type
+  --> /src/bevy-horizon/patches/getrandom-0.2/src/lazy.rs:29:38
+   |
+29 |     pub const UNINIT: usize = usize::max_value();
+   |                                      ^^^^^^^^^
+
+warning: `getrandom` (lib) generated 2 warnings
+   Compiling toml_writer v1.1.3+spec-1.1.0
+   Compiling prettyplease v0.2.37
+   Compiling toml v1.1.6+spec-1.1.0
+   Compiling rand_core v0.6.4
+   Compiling ppv-lite86 v0.2.21
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling log v0.4.34
+   Compiling digest v0.10.7
+   Compiling rand_chacha v0.3.1
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.21
+   Compiling rustc-std-workspace-core v1.99.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/rustc-std-workspace-core)
+   Compiling alloc v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/alloc)
+   Compiling unwind v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/unwind)
+   Compiling adler2 v2.0.1
+   Compiling cfg-if v1.0.4
+   Compiling rustc-demangle v0.1.28
+   Compiling rustc-literal-escaper v0.0.8
+   Compiling siphasher v1.0.4
+   Compiling heck v0.5.0
+   Compiling cpufeatures v0.2.17
+   Compiling sha2 v0.10.9
+   Compiling phf_shared v0.11.3
+   Compiling rand v0.8.8
+   Compiling horizon-mod-surface v0.1.0 (/src/horizon-nx/crates/horizon-mod-surface)
+   Compiling phf_generator v0.11.3
+   Compiling phf_codegen v0.11.3
+   Compiling thiserror v2.0.21
+   Compiling unicode_names2_generator v2.0.0
+   Compiling bytemuck_derive v1.12.1
+   Compiling rustc-std-workspace-alloc v1.99.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/rustc-std-workspace-alloc)
+   Compiling gimli v0.34.0
+   Compiling miniz_oxide v0.9.1
+   Compiling std_detect v0.1.5 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std_detect)
+   Compiling addr2line v0.27.1
+   Compiling panic_abort v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/panic_abort)
+   Compiling panic_unwind v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/panic_unwind)
+   Compiling horizon-mod-source v0.1.0 (/src/horizon-nx/crates/horizon-mod-source)
+   Compiling cfg_aliases v0.2.2
+   Compiling unicode_names2 v2.0.0
+   Compiling horizon-mod-point-shape v0.1.0 (/src/horizon-nx/crates/horizon-mod-point-shape)
+   Compiling horizon-game-discovery v0.1.0 (/src/horizon-nx/crates/horizon-game-discovery)
+   Compiling wasmparser v0.261.0
+   Compiling id-arena v2.3.0
+   Compiling crc32fast v1.5.2
+   Compiling synstructure v0.14.0
+   Compiling autocfg v1.5.1
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling num-traits v0.2.19
+   Compiling zerovec-derive v0.11.6
+   Compiling rustc_version v0.4.1
+   Compiling regex-syntax v0.8.11
+   Compiling displaydoc v0.2.7
+   Compiling getrandom v0.4.3 (/src/bevy-horizon/patches/getrandom)
+   Compiling zerocopy-derive v0.8.60
+   Compiling rustversion v1.0.23
+   Compiling proc_macro v0.0.0 (/usr/local/rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/proc_macro)
+   Compiling wit-parser v0.261.0
+warning: struct `stat` is never constructed
+   --> /src/bevy-horizon/patches/libc/src/unix/newlib/horizon/mod.rs:118:16
+    |
+118 |     pub struct stat {
+    |                ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+    = note: this warning originates in the macro `s` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `libc` (lib) generated 1 warning
+   Compiling subtle v2.6.1
+   Compiling simd-adler32 v0.3.10
+   Compiling bytemuck v1.25.2
+   Compiling phf v0.11.3
+   Compiling horizon-mod-api-gen v0.1.0 (/src/horizon-nx/crates/horizon-mod-api-gen)
+   Compiling zlib-rs v0.6.8
+   Compiling horizon-core v0.1.0 (/src/horizon-nx/crates/horizon-core)
+   Compiling zerofrom v0.1.8
+   Compiling stable_deref_trait v1.2.1
+   Compiling yoke v0.8.3
+   Compiling arrayvec v0.7.8
+   Compiling once_cell v1.21.4
+   Compiling smallvec v1.16.2
+   Compiling zerovec v0.11.8
+   Compiling flate2 v1.1.10
+   Compiling zeroize v1.9.1
+   Compiling bumpalo v3.20.3
+   Compiling zopfli v0.8.4
+   Compiling rustc-hash v1.1.0
+   Compiling typed-path v0.13.0
+   Compiling either v1.19.0
+   Compiling fnv v1.0.7
+   Compiling itertools v0.14.0
+   Compiling zip v9.1.3
+   Compiling naga-types v30.0.1
+   Compiling tinystr v0.8.4
+   Compiling litemap v0.8.3
+   Compiling termcolor v1.4.1
+   Compiling unicode-xid v0.2.6
+   Compiling writeable v0.6.4
+   Compiling scopeguard v1.2.0
+   Compiling unicode-width v0.2.2
+   Compiling bit-vec v0.9.1
+   Compiling naga v30.0.1 (/src/horizon-nx/third_party/naga)
+   Compiling aho-corasick v1.1.5
+   Compiling half v2.7.1
+   Compiling regex-automata v0.4.18
+   Compiling bit-set v0.10.0
+   Compiling codespan-reporting v0.13.1
+   Compiling icu_locale_core v2.3.0
+   Compiling pp-rs v0.2.1
+   Compiling prost-derive v0.14.4
+   Compiling horizon-mod-runtime v0.1.0 (/src/horizon-nx/crates/horizon-mod-runtime)
+   Compiling potential_utf v0.1.6
+   Compiling zerotrie v0.2.5
+   Compiling spirv v0.4.0+sdk-1.4.341.0
+   Compiling utf8_iter v1.0.4
+   Compiling icu_normalizer_data v2.3.0
+   Compiling icu_properties_data v2.3.0
+   Compiling icu_collections v2.3.0
+   Compiling icu_provider v2.3.1
+   Compiling horizon-guest-stack v0.1.0 (/src/horizon-nx/crates/horizon-guest-stack)
+warning: constant `REQUIRED` is never used
+   --> crates/horizon-guest-stack/src/lib.rs:142:7
+    |
+142 | const REQUIRED: usize = GUEST_STACK_BYTES + HOST_HEADROOM;
+    |       ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `horizon-guest-stack` (lib) generated 1 warning
+   Compiling logos-codegen v0.15.1
+   Compiling shlex v2.0.1
+   Compiling bytes v1.12.1
+   Compiling find-msvc-tools v0.1.14
+   Compiling cc v1.6.0
+   Compiling prost v0.14.4
+   Compiling glam v0.30.10
+   Compiling beef v0.5.2
+   Compiling lazy_static v1.5.1
+   Compiling rustix v1.1.5 (/src/bevy-horizon/patches/rustix)
+   Compiling ring v0.17.14 (/src/bevy-horizon/patches/ring)
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling prost-types v0.14.4
+   Compiling logos-codegen v0.16.1
+   Compiling horizon-assets v0.1.0 (/src/horizon-nx/crates/horizon-assets)
+   Compiling cobs v0.3.0
+   Compiling inout v0.1.4
+   Compiling errno v0.3.14
+   Compiling raw-window-handle v0.6.2 (/src/bevy-horizon/patches/raw-window-handle)
+   Compiling libmimalloc-sys v0.1.49 (/src/horizon-nx/packaging/switch/stubs/libmimalloc-sys)
+   Compiling mimalloc v0.1.52 (/src/horizon-nx/packaging/switch/stubs/mimalloc)
+   Compiling miette-derive v7.6.0
+   Compiling horizon-mod-api-macros v0.1.0 (/src/horizon-nx/crates/horizon-mod-api-macros)
+   Compiling horizon-world v0.1.0 (/src/horizon-nx/crates/horizon-world)
+   Compiling unicode-width v0.1.14
+   Compiling miette v7.6.0
+   Compiling horizon-threads v0.1.0 (/src/horizon-nx/crates/horizon-threads)
+   Compiling cipher v0.4.4
+   Compiling postcard v1.1.3
+   Compiling logos-derive v0.16.1
+   Compiling idna_adapter v1.2.2
+   Compiling logos-derive v0.15.1
+   Compiling rustls-pki-types v1.15.1
+   Compiling miniz_oxide v0.8.9
+   Compiling fdeflate v0.3.7
+   Compiling libloading v0.8.9
+   Compiling lz4_flex v0.14.0
+   Compiling xxhash-rust v0.8.19
+   Compiling linux-raw-sys v0.12.1
+   Compiling pkg-config v0.3.34
+   Compiling parking_lot_core v0.9.12
+   Compiling ash v0.38.0+1.3.281
+   Compiling foldhash v0.1.5
+   Compiling getrandom v0.3.4 (/src/horizon-nx/third_party/getrandom-0.3)
+   Compiling hashbrown v0.15.5
+   Compiling wayland-sys v0.31.11
+   Compiling png v0.18.1
+   Compiling logos v0.15.1
+   Compiling idna v1.1.0
+   Compiling logos v0.16.1
+   Compiling encoding_rs v0.8.42
+   Compiling static_assertions v1.1.0
+   Compiling untrusted v0.9.0
+   Compiling allocator-api2 v0.2.21
+   Compiling fastrand v2.5.0
+   Compiling khronos-egl v6.0.0
+   Compiling fixedbitset v0.5.7
+   Compiling tempfile v3.27.0
+   Compiling petgraph v0.8.3
+   Compiling hashbrown v0.16.1
+   Compiling wgpu-types v30.0.1
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/polyfill/slice/as_chunks.rs:19:44
+   |
+19 | pub fn as_chunks<T, const N: usize>(slice: &[T]) -> (AsChunks<T, N>, &[T]) {
+   |                                            ^^^^      ^^^^^^^^^^^^^^  ^^^^ the same lifetime is elided here
+   |                                            |         |
+   |                                            |         the same lifetime is hidden here
+   |                                            the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+19 | pub fn as_chunks<T, const N: usize>(slice: &[T]) -> (AsChunks<'_, T, N>, &[T]) {
+   |                                                               +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/polyfill/slice/as_chunks_mut.rs:18:48
+   |
+18 | pub fn as_chunks_mut<T, const N: usize>(slice: &mut [T]) -> (AsChunksMut<T, N>, &mut [T]) {
+   |                                                ^^^^^^^^      ^^^^^^^^^^^^^^^^^  ^^^^^^^^ the same lifetime is elided here
+   |                                                |             |
+   |                                                |             the same lifetime is hidden here
+   |                                                the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+18 | pub fn as_chunks_mut<T, const N: usize>(slice: &mut [T]) -> (AsChunksMut<'_, T, N>, &mut [T]) {
+   |                                                                          +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/polyfill/slice/as_chunks_mut.rs:60:19
+   |
+60 |     pub fn as_ref(&self) -> AsChunks<T, N> {
+   |                   ^^^^^     ^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                   |
+   |                   the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+60 |     pub fn as_ref(&self) -> AsChunks<'_, T, N> {
+   |                                      +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/polyfill/slice/as_chunks_mut.rs:67:47
+   |
+67 |     pub fn chunks_mut<const CHUNK_LEN: usize>(&mut self) -> AsChunksMutChunksMutIter<T, N> {
+   |                                               ^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                                               |
+   |                                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+67 |     pub fn chunks_mut<const CHUNK_LEN: usize>(&mut self) -> AsChunksMutChunksMutIter<'_, T, N> {
+   |                                                                                      +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> /src/bevy-horizon/patches/ring/src/arithmetic/bigint/modulus.rs:116:27
+    |
+116 |     pub(crate) fn modulus(&self, cpu_features: cpu::Features) -> Modulus<M> {
+    |                           ^^^^^ the lifetime is elided here      ^^^^^^^^^^ the same lifetime is hidden here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+116 |     pub(crate) fn modulus(&self, cpu_features: cpu::Features) -> Modulus<'_, M> {
+    |                                                                          +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/arithmetic/limbs512/storage.rs:45:9
+   |
+45 |         &mut self,
+   |         ^^^^^^^^^ the lifetime is elided here
+...
+48 |     ) -> Result<AsChunksMut<Limb, LIMBS_PER_CHUNK>, LenMismatchError> {
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+48 |     ) -> Result<AsChunksMut<'_, Limb, LIMBS_PER_CHUNK>, LenMismatchError> {
+   |                             +++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/pkcs8.rs:56:21
+   |
+56 |     fn alg_id_value(&self) -> untrusted::Input {
+   |                     ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                     |
+   |                     the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+56 |     fn alg_id_value(&self) -> untrusted::Input<'_> {
+   |                                               ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/pkcs8.rs:65:22
+   |
+65 |     pub fn curve_oid(&self) -> untrusted::Input {
+   |                      ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                      |
+   |                      the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+65 |     pub fn curve_oid(&self) -> untrusted::Input<'_> {
+   |                                                ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> /src/bevy-horizon/patches/ring/src/rsa/public_modulus.rs:91:25
+   |
+91 |     pub(super) fn value(&self, cpu_features: cpu::Features) -> bigint::Modulus<N> {
+   |                         ^^^^^ the lifetime is elided here      ^^^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+91 |     pub(super) fn value(&self, cpu_features: cpu::Features) -> bigint::Modulus<'_, N> {
+   |                                                                                +++
+
+warning: `ring` (lib) generated 9 warnings (run `cargo fix --lib -p ring` to apply 9 suggestions)
+   Compiling protox-parse v0.9.0
+   Compiling prost-reflect v0.16.5
+   Compiling dlib v0.5.3
+   Compiling regex v1.13.1
+   Compiling lock_api v0.4.14
+   Compiling simdutf8 v0.1.5
+   Compiling bitflags v1.3.2
+   Compiling presser v0.3.1
+   Compiling percent-encoding v2.3.2
+   Compiling wgpu-hal v30.0.1 (/src/horizon-nx/third_party/wgpu-hal)
+warning: variants `Missing`, `Enumeration`, `EnumerationLimit`, and `InvalidKey` are never constructed
+   --> crates/horizon-world/src/native_load_context.rs:462:5
+    |
+461 | enum SnapshotError {
+    |      ------------- variants in this enum
+462 |     Missing,
+    |     ^^^^^^^
+463 |     Directory(std::io::Error),
+464 |     Enumeration {
+    |     ^^^^^^^^^^^
+...
+468 |     EnumerationLimit(Vec<OsString>),
+    |     ^^^^^^^^^^^^^^^^
+469 |     InvalidKey {
+    |     ^^^^^^^^^^
+    |
+    = note: `SnapshotError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `settings_directory` is never used
+   --> crates/horizon-world/src/native_load_context.rs:483:4
+    |
+483 | fn settings_directory<T>(result: std::io::Result<T>) -> Result<T, SnapshotError> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `sorted_names` is never used
+   --> crates/horizon-world/src/native_load_context.rs:495:4
+    |
+495 | fn sorted_names(
+    |    ^^^^^^^^^^^^
+
+   Compiling multiversion_no_op v1.0.0
+   Compiling rustls v0.23.46
+   Compiling multimap v0.10.1
+   Compiling prost-build v0.14.4
+   Compiling form_urlencoded v1.2.2
+   Compiling symphonia-core v0.5.5
+   Compiling parking_lot v0.12.5
+   Compiling gpu-allocator v0.28.0
+   Compiling protox v0.9.1
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling rustls-webpki v0.103.16
+   Compiling webpki-roots v1.0.10
+   Compiling ordered-float v5.5.0
+   Compiling profiling v1.0.18
+   Compiling glow v0.17.0
+   Compiling renderdoc-sys v1.1.0
+   Compiling webpki-roots v0.26.11
+   Compiling horizon-perf-format v0.1.0 (/src/horizon-nx/crates/horizon-perf-format)
+   Compiling symphonia-metadata v0.5.5
+   Compiling url v2.5.8
+   Compiling aes v0.8.4
+   Compiling sha1 v0.10.7
+   Compiling socket2 v0.5.10 (/src/horizon-nx/third_party/socket2)
+   Compiling const-default v1.0.0
+   Compiling base64 v0.22.1
+   Compiling wgpu-core v30.0.1 (/src/horizon-nx/third_party/wgpu-core)
+   Compiling litrs v1.0.0
+   Compiling horizon-nx v0.1.0 (/src/horizon-nx/crates/horizon-nx)
+   Compiling crossbeam-utils v0.8.23
+   Compiling ureq v2.12.1
+   Compiling document-features v0.2.12
+   Compiling rlsf v0.2.3 (/src/horizon-nx/third_party/rlsf)
+warning: associated items `deallocate_unknown_align` and `size_of_allocation_unknown_align` are never used
+   --> third_party/rlsf/src/flex.rs:562:26
+    |
+279 | / impl<
+280 | |         Source: FlexSource,
+281 | |         FLBitmap: BinInteger,
+282 | |         SLBitmap: BinInteger,
+283 | |         const FLLEN: usize,
+284 | |         const SLLEN: usize,
+285 | |     > FlexTlsf<Source, FLBitmap, SLBitmap, FLLEN, SLLEN>
+    | |________________________________________________________- associated items in this implementation
+...
+562 |       pub(crate) unsafe fn deallocate_unknown_align(&mut self, ptr: NonNull<u8>) {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+641 |       pub(crate) unsafe fn size_of_allocation_unknown_align(ptr: NonNull<u8>) -> usize {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `deallocate_unknown_align` is never used
+    --> third_party/rlsf/src/tlsf.rs:1022:26
+     |
+ 209 | / impl<'pool, FLBitmap: BinInteger, SLBitmap: BinInteger, const FLLEN: usize, const SLLEN: usize>
+ 210 | |     Tlsf<'pool, FLBitmap, SLBitmap, FLLEN, SLLEN>
+     | |_________________________________________________- method in this implementation
+...
+1022 |       pub(crate) unsafe fn deallocate_unknown_align(&mut self, ptr: NonNull<u8>) {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `rlsf` (lib) generated 2 warnings
+   Compiling horizon-protocol v0.1.0 (/src/horizon-nx/crates/horizon-protocol)
+   Compiling symphonia-utils-xiph v0.5.5
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1 (/src/horizon-nx/third_party/wgpu-core-deps-windows-linux-android)
+   Compiling horizon-client-core v0.1.0 (/src/horizon-nx/crates/horizon-client-core)
+   Compiling horizon-shader-api v0.1.0 (/src/horizon-nx/crates/horizon-shader-api)
+   Compiling tracing-core v0.1.36
+   Compiling pin-project-lite v0.2.17
+   Compiling minisign-verify v0.3.0
+   Compiling horizon-hooks v0.1.0 (/src/horizon-nx/crates/horizon-hooks)
+   Compiling horizon-system v0.1.0 (/src/horizon-nx/crates/horizon-system)
+   Compiling winit v0.30.13 (/src/horizon-nx/third_party/winit)
+   Compiling wgpu v30.0.1 (/src/horizon-nx/third_party/wgpu)
+   Compiling crossbeam-epoch v0.9.21
+   Compiling tracing v0.1.44
+warning: unnecessary qualification
+  --> third_party/wgpu-core/src/instance.rs:78:42
+   |
+78 |         if !instance_desc.flags.contains(wgt::InstanceFlags::VALIDATION) {
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: the lint level is defined here
+  --> third_party/wgpu-core/src/lib.rs:53:5
+   |
+53 |     unused_qualifications
+   |     ^^^^^^^^^^^^^^^^^^^^^
+help: remove the unnecessary path segments
+   |
+78 -         if !instance_desc.flags.contains(wgt::InstanceFlags::VALIDATION) {
+78 +         if !instance_desc.flags.contains(InstanceFlags::VALIDATION) {
+   |
+
+warning: unnecessary qualification
+  --> third_party/wgpu-core/src/instance.rs:81:25
+   |
+81 |                 .remove(wgt::InstanceFlags::VALIDATION_INDIRECT_CALL);
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -                 .remove(wgt::InstanceFlags::VALIDATION_INDIRECT_CALL);
+81 +                 .remove(InstanceFlags::VALIDATION_INDIRECT_CALL);
+   |
+
+   Compiling horizon-mod-vocab v0.1.0 (/src/horizon-nx/crates/horizon-mod-vocab)
+   Compiling horizon-engine-slots v0.1.0 (/src/horizon-nx/crates/horizon-engine-slots)
+warning: `horizon-world` (lib) generated 3 warnings
+   Compiling smol_str v0.2.2
+   Compiling horizon-switch v0.1.0 (/src/horizon-nx/crates/horizon-switch)
+   Compiling ttf-parser v0.25.1
+   Compiling cursor-icon v1.2.0
+   Compiling dpi v0.1.2
+   Compiling cpal v0.17.3 (/src/bevy-horizon/patches/cpal)
+   Compiling crossbeam-deque v0.8.8
+   Compiling owned_ttf_parser v0.25.1
+warning: `wgpu-core` (lib) generated 2 warnings (run `cargo fix --lib -p wgpu-core` to apply 2 suggestions)
+   Compiling symphonia-codec-vorbis v0.5.5
+   Compiling symphonia-format-ogg v0.5.5
+   Compiling zune-core v0.4.12
+   Compiling quick-error v2.0.1
+   Compiling dasp_sample v0.11.0
+   Compiling iana-time-zone v0.1.65
+   Compiling arboard v3.7.0 (/src/horizon-nx/packaging/switch/stubs/arboard)
+   Compiling byteorder-lite v0.1.0
+   Compiling horizon-addresses v0.1.0 (/src/horizon-nx/crates/horizon-addresses)
+   Compiling ab_glyph_rasterizer v0.1.10
+   Compiling rayon-core v1.13.0
+   Compiling ab_glyph v0.2.32
+   Compiling image-webp v0.2.4
+   Compiling chrono v0.4.45
+   Compiling zune-jpeg v0.4.21
+   Compiling symphonia v0.5.5
+   Compiling horizon-hdr v0.1.0 (/src/horizon-nx/crates/horizon-hdr)
+   Compiling horizon-polytone v0.1.0 (/src/horizon-nx/crates/horizon-polytone)
+   Compiling horizon-optifine v0.1.0 (/src/horizon-nx/crates/horizon-optifine)
+   Compiling horizon-bench v0.1.0 (/src/horizon-nx/crates/horizon-bench)
+   Compiling horizon-shaders v0.1.0 (/src/horizon-nx/crates/horizon-shaders)
+   Compiling horizon-narrator v0.1.0 (/src/horizon-nx/crates/horizon-narrator)
+   Compiling pollster v0.4.0
+   Compiling uuid v1.28.0
+   Compiling horizon-java-properties v0.1.0 (/src/horizon-nx/crates/horizon-java-properties)
+   Compiling unicode-bidi v0.3.18
+   Compiling twox-hash v2.1.5
+   Compiling gilrs v0.11.2
+   Compiling ruzstd v0.9.1
+   Compiling horizon-server-files v0.1.0 (/src/horizon-nx/crates/horizon-server-files)
+   Compiling gilrs-core v0.6.8 (/src/horizon-nx/third_party/gilrs-core)
+warning: unused `#[macro_use]` import
+ --> third_party/gilrs-core/src/lib.rs:1:1
+  |
+1 | #[macro_use]
+  | ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `gilrs-core` (lib) generated 1 warning
+   Compiling horizon-platform v0.1.0 (/src/horizon-nx/crates/horizon-platform)
+   Compiling horizon-mod-api v0.1.0 (/src/horizon-nx/crates/horizon-mod-api)
+   Compiling vec_map v0.8.2
+   Compiling curve25519-dalek v4.1.3
+   Compiling horizon-client-lib v0.1.0 (/src/horizon-nx/crates/horizon-client-lib)
+   Compiling winresource v0.1.34
+   Compiling rayon v1.12.0
+   Compiling horizon-telemetry v0.1.0 (/src/horizon-nx/crates/horizon-telemetry)
+   Compiling horizon-anticheat v0.1.0 (/src/horizon-nx/crates/horizon-anticheat)
+   Compiling hmac v0.12.1
+   Compiling universal-hash v0.5.1
+   Compiling horizon-mcp v0.1.0 (/src/horizon-nx/crates/horizon-mcp)
+   Compiling mio v1.2.4 (/src/horizon-nx/third_party/mio)
+   Compiling opaque-debug v0.3.1
+   Compiling fs4 v1.1.0 (/src/horizon-nx/packaging/switch/stubs/fs4)
+   Compiling poly1305 v0.8.0
+   Compiling hkdf v0.12.4
+   Compiling chacha20 v0.9.1
+   Compiling aead v0.5.2
+   Compiling chacha20poly1305 v0.10.1
+   Compiling spake2 v0.4.0
+   Compiling horizon-client v0.1.0 (/src/horizon-nx/crates/horizon-client)
+   Compiling horizon-mod-render v0.1.0 (/src/horizon-nx/crates/horizon-mod-render)
+   Compiling horizon-mod-points v0.1.0 (/src/horizon-nx/crates/horizon-mod-points)
+   Compiling socket2 v0.6.5
+   Compiling if-addrs v0.15.0 (/src/horizon-nx/packaging/switch/stubs/if-addrs)
+   Compiling horizon-friends v0.1.0 (/src/horizon-nx/crates/horizon-friends)
+   Compiling horizon-mod-package v0.1.0 (/src/horizon-nx/crates/horizon-mod-package)
+warning: field `file` is never read
+  --> crates/horizon-mod-package/src/install_lock.rs:17:5
+   |
+14 | struct LockState {
+   |        --------- field in this struct
+...
+17 |     file: Option<File>,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling horizon-items v0.1.0 (/src/horizon-nx/crates/horizon-items)
+   Compiling horizon-command v0.1.0 (/src/horizon-nx/crates/horizon-command)
+   Compiling horizon-client-input v0.1.0 (/src/horizon-nx/crates/horizon-client-input)
+warning: `horizon-mod-package` (lib) generated 1 warning
+   Compiling horizon-client-render v0.1.0 (/src/horizon-nx/crates/horizon-client-render)
+warning: overflow evaluating the requirement `NativePack: Send`
+  --> crates/horizon-client-render/src/gfx/native_executor.rs:13:27
+   |
+13 | impl ExternalPipeline for NativePack {
+   |                           ^^^^^^^^^^
+   |
+   = note: which requires `std::option::Option<PassTiming>: Send`
+   = note: which requires `PassTiming: Send`
+   = note: which requires `std::option::Option<(TextureFormat, wgpu::RenderPipeline)>: Send`
+   = note: which requires `(TextureFormat, wgpu::RenderPipeline): Send`
+   = note: which requires `wgpu::RenderPipeline: Send`
+   = note: which requires `wgpu::dispatch::DispatchRenderPipeline: Send`
+   = note: which requires `std::sync::Arc<wgpu::backend::wgpu_core::CoreRenderPipeline>: Send`
+   = note: which requires `wgpu::backend::wgpu_core::CoreRenderPipeline: Send`
+   = note: which requires `wgpu::backend::wgpu_core::ContextWgpuCore: Send`
+   = note: which requires `std::sync::Arc<wgpu::wgpu_core::global::Global>: Send`
+   = note: which requires `wgpu::wgpu_core::global::Global: Send`
+   = note: which requires `Hub: Send`
+   = note: which requires `wgpu::wgpu_core::registry::Registry<std::sync::Arc<lock_api::mutex::Mutex<parking_lot::raw_mutex::RawMutex, wgpu::wgpu_core::command::ComputePass>>>: Send`
+   = note: which requires `wgc::lock::vanilla::RwLock<wgpu::wgpu_core::storage::Storage<std::sync::Arc<lock_api::mutex::Mutex<parking_lot::raw_mutex::RawMutex, wgpu::wgpu_core::command::ComputePass>>>>: Send`
+   = note: which requires `lock_api::rwlock::RwLock<parking_lot::raw_rwlock::RawRwLock, wgpu::wgpu_core::storage::Storage<std::sync::Arc<lock_api::mutex::Mutex<parking_lot::raw_mutex::RawMutex, wgpu::wgpu_core::command::ComputePass>>>>: Send`
+   = note: and so on...
+   = help: consider adding a manual `impl` of auto traits like `Send` for intermediate types, if auto traits are involved
+   = help: or consider increasing the recursion limit by adding a `#![recursion_limit = "256"]` attribute to your crate (`horizon_client_render`)
+   = note: this lint is attached to the whole crate and can't be disabled on a per-function basis
+   = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+   = note: for more information, see issue #159228 <https://github.com/rust-lang/rust/issues/159228>
+   = note: `#[warn(recursion_depth_exceeding_limit)]` (part of `#[warn(future_incompatible)]`) on by default
+
+warning: use of deprecated method `cpal::traits::DeviceTrait::name`: Use `description()` for comprehensive device information including name, manufacturer, and device type. Use `id()` for a unique, stable device identifier that persists across reboots and reconnections.
+    --> crates/horizon-client-render/src/audio.rs:1298:32
+     |
+1298 |         m.device_name = device.name().unwrap_or_default();
+     |                                ^^^^
+     |
+     = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `cpal::traits::DeviceTrait::name`: Use `description()` for comprehensive device information including name, manufacturer, and device type. Use `id()` for a unique, stable device identifier that persists across reboots and reconnections.
+    --> crates/horizon-client-render/src/audio.rs:1313:23
+     |
+1313 |     let name = device.name().unwrap_or_else(|_| "unnamed device".into());
+     |                       ^^^^
+
+warning: use of deprecated method `cpal::traits::DeviceTrait::name`: Use `description()` for comprehensive device information including name, manufacturer, and device type. Use `id()` for a unique, stable device identifier that persists across reboots and reconnections.
+    --> crates/horizon-client-render/src/audio.rs:1339:25
+     |
+1339 |         .and_then(|d| d.name().ok())
+     |                         ^^^^
+
+warning: use of deprecated method `cpal::traits::DeviceTrait::name`: Use `description()` for comprehensive device information including name, manufacturer, and device type. Use `id()` for a unique, stable device identifier that persists across reboots and reconnections.
+    --> crates/horizon-client-render/src/audio.rs:1474:38
+     |
+1474 |             if let Ok(name) = device.name()
+     |                                      ^^^^
+
+warning: use of deprecated method `cpal::traits::DeviceTrait::name`: Use `description()` for comprehensive device information including name, manufacturer, and device type. Use `id()` for a unique, stable device identifier that persists across reboots and reconnections.
+    --> crates/horizon-client-render/src/audio.rs:1609:35
+     |
+1609 |                 let name = device.name().unwrap_or_else(|_| "unnamed device".into());
+     |                                   ^^^^
+
+warning: unused variable: `lock`
+   --> crates/horizon-client-render/src/packs/cache.rs:414:9
+    |
+414 |     let lock = fs::OpenOptions::new()
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_lock`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling horizon-chat-filter v0.1.0 (/src/horizon-nx/crates/horizon-chat-filter)
+   Compiling horizon-cosmetics v0.1.0 (/src/horizon-nx/crates/horizon-cosmetics)
+   Compiling horizon-dualsense v0.1.0 (/src/horizon-nx/crates/horizon-dualsense)
+warning: field `0` is never read
+   --> crates/horizon-dualsense/src/device.rs:135:11
+    |
+135 |     State(State),
+    |     ----- ^^^^^
+    |     |
+    |     field in this variant
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+135 -     State(State),
+135 +     State(()),
+    |
+
+warning: field `0` is never read
+   --> crates/horizon-dualsense/src/device.rs:136:12
+    |
+136 |     Rumble(Rumble),
+    |     ------ ^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+136 -     Rumble(Rumble),
+136 +     Rumble(()),
+    |
+
+warning: field `0` is never read
+   --> crates/horizon-dualsense/src/xbox/device.rs:205:12
+    |
+205 |     Rumble(Rumble),
+    |     ------ ^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+205 -     Rumble(Rumble),
+205 +     Rumble(()),
+    |
+
+warning: `horizon-dualsense` (lib) generated 3 warnings
+   Compiling horizon-theme v0.1.0 (/src/horizon-nx/crates/horizon-theme)
+   Compiling horizon-mod-host v0.1.0 (/src/horizon-nx/crates/horizon-mod-host)
+   Compiling horizon-game v0.1.0 (/src/horizon-nx/crates/horizon-game)
+   Compiling create-engine v0.1.0 (/src/horizon-nx/crates/horizon-create/src/engine)
+   Compiling horizon-create v6.0.11 (/src/horizon-nx/crates/horizon-create)
+   Compiling horizon-client-gameplay v0.1.0 (/src/horizon-nx/crates/horizon-client-gameplay)
+   Compiling horizon-gameplay v0.1.0 (/src/horizon-nx/crates/horizon-gameplay)
+warning: unused imports: `CONFIG_LIST_MAX` and `ConfigEntryKind`
+ --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:9:22
+  |
+9 |     CONFIG_FILE_MAX, CONFIG_LIST_MAX, ConfigEntry, ConfigEntryKind, ConfigFileError, ConfigFiles,
+  |                      ^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::BTreeMap`
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:12:5
+   |
+12 | use std::collections::BTreeMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Write`
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:15:32
+   |
+15 | use std::io::{ErrorKind, Read, Write};
+   |                                ^^^^^
+
+warning: unused imports: `AtomicU64` and `Ordering`
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:17:25
+   |
+17 | use std::sync::atomic::{AtomicU64, Ordering};
+   |                         ^^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `std::time::UNIX_EPOCH`
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:18:5
+   |
+18 | use std::time::UNIX_EPOCH;
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Read`
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:15:26
+   |
+15 | use std::io::{ErrorKind, Read, Write};
+   |                          ^^^^
+
+warning: fields `path` and `bulk` are never read
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:30:5
+   |
+29 | struct FileRoot {
+   |        -------- fields in this struct
+30 |     path: PathBuf,
+   |     ^^^^
+31 |     bulk: bool,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `cap` is never used
+  --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:35:8
+   |
+34 | impl FileRoot {
+   | ------------- method in this implementation
+35 |     fn cap(&self) -> u64 {
+   |        ^^^
+
+warning: function `is_write_temp` is never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/modding/native_config_files.rs:174:4
+    |
+174 | fn is_write_temp(name: &str) -> bool {
+    |    ^^^^^^^^^^^^^
+
+warning: function `ff_pad` is never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/interface/pad/hardware.rs:173:4
+    |
+173 | fn ff_pad(gilrs: &gilrs::Gilrs, id: PadId) -> PadId {
+    |    ^^^^^^
+
+warning: function `xbox_steps` is never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/interface/pad/hardware.rs:239:4
+    |
+239 | fn xbox_steps(rumble: Rumble, impulse: bool, strength: f32) -> Vec<(xbox::Motors, Duration)> {
+    |    ^^^^^^^^^^
+
+warning: methods `pad_xbox_output` and `pad_output` are never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/interface/pad/hardware.rs:785:8
+    |
+751 | impl Game<'_> {
+    | ------------- methods in this implementation
+...
+785 |     fn pad_xbox_output(&self) -> Option<&xbox::Link> {
+    |        ^^^^^^^^^^^^^^^
+...
+793 |     fn pad_output(&self) -> Option<&horizon_dualsense::Link> {
+    |        ^^^^^^^^^^
+
+warning: method `recipe_search_text` is never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/items/recipe_book.rs:262:19
+    |
+196 | impl Game<'_> {
+    | ------------- method in this implementation
+...
+262 |     pub(super) fn recipe_search_text(&self) -> Option<String> {
+    |                   ^^^^^^^^^^^^^^^^^^
+
+warning: methods `sign_text` and `sign_replace` are never used
+   --> /src/horizon-nx/crates/horizon-client/src/game/interface/sign_edit.rs:810:19
+    |
+ 53 | impl Game<'_> {
+    | ------------- methods in this implementation
+...
+810 |     pub(super) fn sign_text(&self) -> Option<String> {
+    |                   ^^^^^^^^^
+...
+816 |     pub(super) fn sign_replace(&mut self, text: &str) {
+    |                   ^^^^^^^^^^^^
+
+warning: `horizon-client-render` (lib) generated 7 warnings (run `cargo fix --lib -p horizon-client-render` to apply 1 suggestion)
+warning: `horizon-client` (lib) generated 14 warnings (run `cargo fix --lib -p horizon-client` to apply 5 suggestions)
+    Finished `release` profile [optimized] target(s) in 14m 59s
+==> packaging horizon.nro
+==> checking the NRO's asset section (sphaira refuses an NRO without one)
+    ok: image 0x61d7000 + ASET section, file 97.9 MiB
+==> done: /home/runner/work/horizon-nx/horizon-nx/horizon-nx/target/aarch64-nintendo-horizon/release/horizon.nro (copy it to switch/horizon/ on the SD card; docs/switch.md)
+29bea5b85e1b3b4788b8785ce57beaeb12ae73ce099502053ed3b426a7617048  out/switch/horizon/horizon.nro
+-rw-r--r-- 1 runner runner 1534498 Nov 27 21:25 symbols.txt.gz
