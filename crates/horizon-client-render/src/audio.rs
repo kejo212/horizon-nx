@@ -18,8 +18,11 @@ use horizon_core::random::{LegacyRandom, RandomSource};
 #[cfg(any(feature = "audio", test))]
 use std::path::Path;
 use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
+    collections::{HashMap, VecDeque},
+    sync::{
+        Arc, Mutex,
+        mpsc::{Receiver, SyncSender, sync_channel},
+    },
 };
 
 /// An OpenAL source's state.
@@ -50,7 +53,37 @@ struct Channel {
     started: Option<(String, std::time::Instant)>,
     /// Its sound event plays clearly through a mod's muffle (`Audio::muffle`).
     unmuffled: bool,
+    /// A streamed sound's decoder and the samples it has sent but the mix hasn't taken yet.
+    stream: Option<Streamed>,
 }
+/// What a streamed sound's decoder thread sends the mixer.
+enum StreamMessage {
+    /// The file's sample rate and channel count, once, before its first samples.
+    Start { rate: u32, channels: u16 },
+    /// Interleaved samples, at most [`STREAM_CHUNK_FRAMES`] frames.
+    Samples(Vec<f32>),
+    /// The file ended (and it doesn't loop).
+    End,
+}
+/// A streamed sound's state in the mixer. The decoder thread reads the file a chunk at a time,
+/// so a long music track costs a few hundred KiB here instead of its whole decoded length (a
+/// 5-minute stereo track is over 100 MiB of `f32`).
+struct Streamed {
+    rx: Receiver<StreamMessage>,
+    /// Decoded samples the mix hasn't played yet.
+    pending: VecDeque<f32>,
+    /// Frames per second and channels of the file, once `Start` arrived (0 until then).
+    rate: u32,
+    channels: u16,
+    /// Frames into `pending`.
+    position: f64,
+    /// The decoder sent `End`; the sound stops once `pending` runs out.
+    ended: bool,
+}
+/// Frames per chunk the decoder sends: 1/4 second at 48 kHz.
+const STREAM_CHUNK_FRAMES: usize = 12_000;
+/// Chunks the decoder may queue ahead of the mixer (1/4 second each): 2 seconds.
+const STREAM_CHUNKS: usize = 8;
 /// The cutoff of the muffle's low-pass at full strength: the world heard through ringing ears.
 const MUFFLED_CUTOFF: f32 = 300.0;
 /// The cutoff it sweeps down from as its strength rises.
@@ -687,6 +720,175 @@ fn decode(resource: &Resource) -> Option<(Vec<f32>, u32, u16)> {
     }
     (channels != 0).then_some((samples, rate, channels))
 }
+/// Decodes a streamed sound a chunk at a time and sends the chunks to its mixer channel. The
+/// queue is bounded, so the decoder waits while the mix catches up and a long track costs a few
+/// hundred KiB instead of its whole decoded length.
+fn stream_decode(file: Resource, tx: SyncSender<StreamMessage>, looping: bool, name: String) {
+    use symphonia::core::{
+        audio::SampleBuffer, codecs::DecoderOptions, formats::FormatOptions, io::MediaSourceStream,
+        meta::MetadataOptions, probe::Hint,
+    };
+    let Ok(bytes) = file.read() else {
+        let _ = tx.send(StreamMessage::End);
+        return;
+    };
+    let mut channels = 0usize;
+    loop {
+        let stream = MediaSourceStream::new(
+            Box::new(std::io::Cursor::new(bytes.clone())),
+            Default::default(),
+        );
+        let mut hint = Hint::new();
+        hint.with_extension("ogg");
+        let Ok(probed) = symphonia::default::get_probe().format(
+            &hint,
+            stream,
+            &FormatOptions::default(),
+            &MetadataOptions::default(),
+        ) else {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        };
+        let mut format = probed.format;
+        let Some(track) = format.default_track() else {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        };
+        let id = track.id;
+        let Some(rate) = track.codec_params.sample_rate else {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        };
+        let Ok(mut decoder) =
+            symphonia::default::get_codecs().make(&track.codec_params, &DecoderOptions::default())
+        else {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        };
+        let mut chunk = Vec::with_capacity(STREAM_CHUNK_FRAMES * 2);
+        // One buffer for every packet, so decoding a track doesn't churn the heap.
+        let mut decoded: Option<SampleBuffer<f32>> = None;
+        while let Ok(packet) = format.next_packet() {
+            if packet.track_id() != id {
+                continue;
+            }
+            let Ok(buffer) = decoder.decode(&packet) else {
+                continue;
+            };
+            let spec = *buffer.spec();
+            let frame_channels = spec.channels.count().max(1);
+            // A valid Vorbis packet is a few thousand frames. A corrupt header can claim a
+            // block size of millions, which would allocate that many samples at once.
+            if buffer.capacity() > (rate as usize).max(1) {
+                log::warn!(
+                    "Horizon: streamed {name} packet of {} frames; skipped",
+                    buffer.capacity()
+                );
+                continue;
+            }
+            let frames = buffer.frames();
+            let need = frames * frame_channels;
+            if decoded.as_ref().is_none_or(|d| d.capacity() < need) {
+                decoded = Some(SampleBuffer::<f32>::new(frames as u64, spec));
+            }
+            let decoded = decoded.as_mut().expect("just set");
+            decoded.copy_interleaved_ref(buffer);
+            let out_channels = if frame_channels <= 2 {
+                frame_channels
+            } else {
+                // OpenAL plays multi-channel buffers direct; a stereo output hears the odd/even split.
+                2
+            };
+            if channels == 0 {
+                channels = out_channels;
+                log::info!("Horizon: streaming {name} ({rate} Hz, {channels} ch)");
+                if tx
+                    .send(StreamMessage::Start {
+                        rate,
+                        channels: channels as u16,
+                    })
+                    .is_err()
+                {
+                    return;
+                }
+            } else if out_channels != channels {
+                continue;
+            }
+            if frame_channels <= 2 {
+                chunk.extend_from_slice(decoded.samples());
+            } else {
+                for frame in decoded.samples().chunks(frame_channels) {
+                    let (mut left, mut right) = (0.0, 0.0);
+                    let (mut lefts, mut rights) = (0.0f32, 0.0f32);
+                    for (i, sample) in frame.iter().enumerate() {
+                        if i % 2 == 0 {
+                            left += sample;
+                            lefts += 1.0;
+                        } else {
+                            right += sample;
+                            rights += 1.0;
+                        }
+                    }
+                    chunk.push(left / lefts.max(1.0));
+                    chunk.push(right / rights.max(1.0));
+                }
+            }
+            while chunk.len() >= STREAM_CHUNK_FRAMES * channels {
+                let rest = chunk.split_off(STREAM_CHUNK_FRAMES * channels);
+                if tx.send(StreamMessage::Samples(chunk)).is_err() {
+                    return;
+                }
+                chunk = rest;
+            }
+        }
+        if !chunk.is_empty() {
+            if tx.send(StreamMessage::Samples(chunk)).is_err() {
+                return;
+            }
+        }
+        if !looping {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        }
+        if bytes.is_empty() {
+            let _ = tx.send(StreamMessage::End);
+            return;
+        }
+    }
+}
+/// Takes everything the decoder has sent so far into the stream's queue.
+fn drain_stream(stream: &mut Streamed) {
+    while let Ok(message) = stream.rx.try_recv() {
+        match message {
+            StreamMessage::Start { rate, channels } => {
+                if stream.rate == 0 {
+                    stream.rate = rate;
+                    stream.channels = channels;
+                }
+            }
+            StreamMessage::Samples(samples) => stream.pending.extend(samples),
+            StreamMessage::End => stream.ended = true,
+        }
+    }
+}
+/// Drops the stream frames the mix has already passed. Returns whether the file ended and no
+/// frames are left (the sound is over).
+fn trim_stream(stream: &mut Streamed) -> bool {
+    let channels = stream.channels.max(1) as usize;
+    let frames = stream.pending.len() / channels;
+    let consumed = (stream.position.floor() as usize).min(frames);
+    if consumed > 0 {
+        stream.pending.drain(..consumed * channels);
+        stream.position -= consumed as f64;
+    }
+    if stream.ended && stream.pending.len() <= channels {
+        stream.pending.clear();
+        stream.pending.shrink_to_fit();
+        stream.position = 0.0;
+        return true;
+    }
+    false
+}
 /// A sound file without its variant number (`mob/creeper/say2.ogg` is `mob/creeper/say`): each
 /// player's game picks its own variant of the same event.
 // ponytail: variants named by a trailing number, as vanilla's are; the event name if a pack breaks it.
@@ -734,6 +936,8 @@ impl MixerBackend {
         if let Some(c) = m.channels.get_mut(&channel) {
             if twin {
                 c.state = State::Stopped;
+                // A decoder thread that has not started yet never plays.
+                c.stream = None;
             } else {
                 c.started = Some((key.to_owned(), std::time::Instant::now()));
             }
@@ -768,6 +972,7 @@ impl Backend for MixerBackend {
                 world: self.world,
                 started: None,
                 unmuffled: false,
+                stream: None,
             },
         );
         Some(id)
@@ -836,12 +1041,29 @@ impl Backend for MixerBackend {
             return;
         }
         if sound.stream {
-            // A streamed sound loops by restarting its stream.
-            let mixer = self.mixer.clone();
-            std::thread::spawn(move || {
-                let samples = decode(&file).map(|(s, r, c)| (Arc::new(s), r, c));
-                attach(&mixer, channel, samples, looping);
-            });
+            // A streamed sound is decoded a chunk at a time on its own thread and mixed from a
+            // short queue, so a long music track doesn't hold its whole decoded length in memory.
+            let (tx, rx) = sync_channel(STREAM_CHUNKS);
+            let key = format!("{namespace}:{path}");
+            let spawned = std::thread::Builder::new()
+                .name("sound stream".into())
+                .spawn(move || stream_decode(file, tx, looping, key));
+            if spawned.is_err() {
+                return;
+            }
+            if let Ok(mut m) = self.mixer.lock()
+                && let Some(c) = m.channels.get_mut(&channel)
+                && c.state == State::Initial
+            {
+                c.stream = Some(Streamed {
+                    rx,
+                    pending: VecDeque::new(),
+                    rate: 0,
+                    channels: 0,
+                    position: 0.0,
+                    ended: false,
+                });
+            }
             return;
         }
         let key = format!("{namespace}:{path}");
@@ -882,7 +1104,11 @@ impl Backend for MixerBackend {
     /// `alSourceStop`: any state becomes stopped, an initial source too (a
     /// sound still decoding then never starts).
     fn stop(&mut self, channel: ChannelId) {
-        self.with(channel, |c| c.state = State::Stopped);
+        self.with(channel, |c| {
+            c.state = State::Stopped;
+            // Drops the receiver: a decoder still sending stops.
+            c.stream = None;
+        });
     }
     fn pause(&mut self, channel: ChannelId) {
         self.with(channel, |c| {
@@ -992,17 +1218,29 @@ fn mix(mixer: &mut Mixer, data: &mut [f32], channels: usize, rate: u32) {
     );
     let shared = mixer.cameras.len() > 1;
     let dot = |a: [f64; 3], b: [f64; 3]| (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) as f32;
+    // What the streamed sounds' decoders sent since the last buffer.
+    for c in mixer.channels.values_mut() {
+        if let Some(stream) = &mut c.stream {
+            drain_stream(stream);
+            // The file's format is known: the sound can start.
+            if stream.rate != 0 && c.state == State::Initial {
+                c.state = State::Playing;
+            }
+        }
+    }
     // Gains and pans per source for this buffer.
     let mut voices = std::mem::take(&mut mixer.voices);
     voices.clear();
     for (id, c) in &mut mixer.channels {
-        let Some((_, source_rate, source_channels)) = &c.samples else {
-            continue;
+        let (source_rate, source_channels) = match (&c.samples, &c.stream) {
+            (Some((_, rate, channels)), _) => (*rate, *channels),
+            (None, Some(stream)) if stream.rate != 0 => (stream.rate, stream.channels),
+            _ => continue,
         };
         // OpenAL plays a multi-channel buffer direct: no panning and no distance attenuation
         // (`CalcVoiceParams`' non-spatialized path, vanilla's HRTF-off stereo context). Vanilla's
         // music and records are stereo. A mono buffer is the positional one.
-        let direct = *source_channels > 1;
+        let direct = source_channels > 1;
         if c.state != State::Playing {
             continue;
         }
@@ -1066,7 +1304,7 @@ fn mix(mixer: &mut Mixer, data: &mut [f32], channels: usize, rate: u32) {
                 (gain, [left * gain, right * gain])
             }
         };
-        let step = f64::from(*source_rate) / f64::from(rate) * f64::from(c.pitch.max(0.0));
+        let step = f64::from(source_rate) / f64::from(rate) * f64::from(c.pitch.max(0.0));
         voices.push((*id, [left, right, gain], step));
     }
     // A mod's muffle: the sounds it doesn't exempt mix into a bus of their own first.
@@ -1080,16 +1318,76 @@ fn mix(mixer: &mut Mixer, data: &mut [f32], channels: usize, rate: u32) {
         let Some(c) = mixer.channels.get_mut(&id) else {
             continue;
         };
-        let Some((samples, _, source_channels)) = c.samples.clone() else {
-            continue;
-        };
-        let source_channels = source_channels as usize;
-        let frames = samples.len() / source_channels;
         let inaudible = if channels >= 2 {
             left == 0.0 && right == 0.0
         } else {
             gain == 0.0
         };
+        let out: &mut [f32] = if muffling && !c.unmuffled {
+            &mut bus
+        } else {
+            &mut *data
+        };
+        if c.stream.is_some() {
+            let mut over = false;
+            {
+                let stream = c.stream.as_mut().expect("present");
+                let source_channels = stream.channels.max(1) as usize;
+                let frames = stream.pending.len() / source_channels;
+                if inaudible {
+                    // Keep time with the file, but hold the last frame so the mix can
+                    // interpolate as soon as it is heard again.
+                    stream.position += step * (out.len() / channels) as f64;
+                    if !stream.ended && stream.position > (frames.saturating_sub(1)) as f64 {
+                        stream.position = (frames.saturating_sub(1)) as f64;
+                    }
+                } else {
+                    for frame in out.chunks_mut(channels) {
+                        let i = stream.position as usize;
+                        if i + 1 >= frames {
+                            // No next frame to interpolate with: wait for the decoder, or
+                            // stop if the file ended.
+                            over = stream.ended;
+                            break;
+                        }
+                        let t = (stream.position - i as f64) as f32;
+                        let samples = &stream.pending;
+                        if source_channels > 1 {
+                            let l = samples[i * 2] + (samples[(i + 1) * 2] - samples[i * 2]) * t;
+                            let r = samples[i * 2 + 1]
+                                + (samples[(i + 1) * 2 + 1] - samples[i * 2 + 1]) * t;
+                            if channels >= 2 {
+                                frame[0] += l * left;
+                                frame[1] += r * right;
+                            } else {
+                                frame[0] += (l + r) * 0.5 * gain;
+                            }
+                        } else {
+                            let s = samples[i] + (samples[i + 1] - samples[i]) * t;
+                            if channels >= 2 {
+                                frame[0] += s * left;
+                                frame[1] += s * right;
+                            } else {
+                                frame[0] += s * gain;
+                            }
+                        }
+                        stream.position += step;
+                    }
+                }
+                over |= trim_stream(stream);
+            }
+            if over {
+                c.state = State::Stopped;
+                // Unblocks the decoder thread if it is still sending.
+                c.stream = None;
+            }
+            continue;
+        }
+        let Some((samples, _, source_channels)) = c.samples.clone() else {
+            continue;
+        };
+        let source_channels = source_channels as usize;
+        let frames = samples.len() / source_channels;
         if inaudible {
             let buffer_frames = data.len() / channels;
             // As the loop below: a sound of one frame or none stops, looping or not.
@@ -1119,11 +1417,6 @@ fn mix(mixer: &mut Mixer, data: &mut [f32], channels: usize, rate: u32) {
             continue;
         }
 
-        let out: &mut [f32] = if muffling && !c.unmuffled {
-            &mut bus
-        } else {
-            &mut *data
-        };
         for frame in out.chunks_mut(channels) {
             let mut i = c.position as usize;
             if i + 1 >= frames {
@@ -2794,6 +3087,7 @@ mod tests {
             world: 0,
             started: None,
             unmuffled: false,
+            stream: None,
         }
     }
 
@@ -3021,6 +3315,55 @@ mod tests {
             mix(&mut m, &mut data, 2, 48_000);
             assert_eq!(data, expected, "yaw {yaw}, source {at:?}");
         }
+    }
+
+    #[test]
+    fn a_streamed_sound_plays_from_its_queue_and_stops_at_the_end() {
+        // A streamed sound starts silent until the decoder's first message names the format,
+        // plays the queued chunks as they arrive, waits when it runs dry, and stops at the end.
+        let (tx, rx) = std::sync::mpsc::sync_channel(8);
+        let mut m = Mixer::default();
+        let mut c = channel(Vec::new(), None, [0.0; 3], false);
+        c.samples = None;
+        c.state = State::Initial;
+        c.stream = Some(Streamed {
+            rx,
+            pending: VecDeque::new(),
+            rate: 0,
+            channels: 0,
+            position: 0.0,
+            ended: false,
+        });
+        m.channels.insert(1, c);
+        let mut data = [0.0; 4];
+        mix(&mut m, &mut data, 2, 48_000);
+        assert_eq!(data, [0.0; 4], "nothing decoded yet");
+        assert_eq!(m.channels[&1].state, State::Initial);
+
+        tx.send(StreamMessage::Start {
+            rate: 48_000,
+            channels: 2,
+        })
+        .expect("the mixer takes it");
+        tx.send(StreamMessage::Samples(vec![
+            0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 1.0, -1.0,
+        ]))
+        .expect("the mixer takes it");
+        mix(&mut m, &mut data, 2, 48_000);
+        assert_eq!(data, [0.25, -0.25, 0.5, -0.5], "stereo plays direct");
+        assert_eq!(m.channels[&1].state, State::Playing);
+
+        mix(&mut m, &mut data, 2, 48_000);
+        assert_eq!(data, [0.75, -0.75, 0.0, 0.0], "the queue drains");
+        mix(&mut m, &mut data, 2, 48_000);
+        assert_eq!(data, [0.0; 4], "dry, but the decoder may still send");
+        assert_eq!(m.channels[&1].state, State::Playing);
+
+        tx.send(StreamMessage::End).expect("the mixer takes it");
+        mix(&mut m, &mut data, 2, 48_000);
+        assert_eq!(data, [0.0; 4]);
+        assert_eq!(m.channels[&1].state, State::Stopped);
+        assert!(m.channels[&1].stream.is_none(), "the receiver is dropped");
     }
 
     #[test]
