@@ -21,7 +21,7 @@ use std::{
     collections::{HashMap, VecDeque},
     sync::{
         Arc, Mutex,
-        mpsc::{Receiver, SyncSender, sync_channel},
+        mpsc::{Receiver, SyncSender, TryRecvError, sync_channel},
     },
 };
 
@@ -787,6 +787,11 @@ fn stream_decode(file: Resource, tx: SyncSender<StreamMessage>, looping: bool, n
                 continue;
             }
             let frames = buffer.frames();
+            // A header or empty packet has no frames. Copying it would slice an empty
+            // `SampleBuffer` by channel, which symphonia's `copy_interleaved_ref` panics on.
+            if frames == 0 {
+                continue;
+            }
             let need = frames * frame_channels;
             if decoded.as_ref().is_none_or(|d| d.capacity() < need) {
                 decoded = Some(SampleBuffer::<f32>::new(frames as u64, spec));
@@ -858,16 +863,26 @@ fn stream_decode(file: Resource, tx: SyncSender<StreamMessage>, looping: bool, n
 }
 /// Takes everything the decoder has sent so far into the stream's queue.
 fn drain_stream(stream: &mut Streamed) {
-    while let Ok(message) = stream.rx.try_recv() {
-        match message {
-            StreamMessage::Start { rate, channels } => {
+    loop {
+        match stream.rx.try_recv() {
+            Ok(StreamMessage::Start { rate, channels }) => {
                 if stream.rate == 0 {
                     stream.rate = rate;
                     stream.channels = channels;
                 }
             }
-            StreamMessage::Samples(samples) => stream.pending.extend(samples),
-            StreamMessage::End => stream.ended = true,
+            Ok(StreamMessage::Samples(samples)) => stream.pending.extend(samples),
+            Ok(StreamMessage::End) => {
+                stream.ended = true;
+                break;
+            }
+            Err(TryRecvError::Empty) => break,
+            Err(TryRecvError::Disconnected) => {
+                // The decoder ended (or panicked) without saying so: play what is queued,
+                // then stop instead of waiting for a sender that is gone.
+                stream.ended = true;
+                break;
+            }
         }
     }
 }
@@ -3364,6 +3379,34 @@ mod tests {
         assert_eq!(data, [0.0; 4]);
         assert_eq!(m.channels[&1].state, State::Stopped);
         assert!(m.channels[&1].stream.is_none(), "the receiver is dropped");
+    }
+
+    #[test]
+    fn a_stream_whose_decoder_is_gone_ends_after_its_queue() {
+        // A decoder that stops without sending End (it panicked or the file was cut short)
+        // must not leave the sound waiting forever for a sender that is gone.
+        let (tx, rx) = std::sync::mpsc::sync_channel(8);
+        let mut stream = Streamed {
+            rx,
+            pending: VecDeque::new(),
+            rate: 0,
+            channels: 0,
+            position: 0.0,
+            ended: false,
+        };
+        tx.send(StreamMessage::Start {
+            rate: 48_000,
+            channels: 1,
+        })
+        .expect("the mixer takes it");
+        tx.send(StreamMessage::Samples(vec![0.5, 0.5]))
+            .expect("the mixer takes it");
+        drop(tx);
+        drain_stream(&mut stream);
+        assert_eq!(stream.rate, 48_000);
+        assert_eq!(stream.channels, 1);
+        assert!(stream.ended, "a dropped sender ends the sound");
+        assert_eq!(stream.pending.len(), 2, "queued audio still plays");
     }
 
     #[test]
